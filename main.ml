@@ -1,17 +1,19 @@
 (* main.ml *)
 
 open Syntax ;;
-open Eval ;;
+(* 
+open Eval ;; 
+*)
 
 (* parse : string -> stmt *)
 let parse str = 
   Parser.main Lexer.token 
     (Lexing.from_string str)
 
-
+(*
 let run str = 
   eval_stmt [] (parse str)
-
+ *)
 
 (* read lines from the given file *)
 let read_file name : string =
@@ -28,9 +30,18 @@ let read_file name : string =
 
 let (<.) f g = fun x -> f (g x)
        
+
+(*
 let exec =
   eval_stmt [] <. parse <. read_file
+ *)
 
+let show str =
+  print_string str; str
+			  
+let exec =
+  show <. string_of_proc 0 <. parse <. show <. read_file
+			  
 
 (*
 let () =

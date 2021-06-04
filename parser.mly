@@ -8,7 +8,6 @@
 %token <string> LinkName // X, Y, ABC, ...
 
 // operators
-%token ASTERISK // '*'
 %token BACKSLASH // '\\'
 %token DOT       // '.'
 %token COMMA     // ','

@@ -44,7 +44,7 @@ rule token = parse
   | _
     {
       let message = Printf.sprintf
-        "unknown token %s near characters %d-%d"
+        "unknown token '%s' near characters %d-%d"
         (Lexing.lexeme lexbuf)
         (Lexing.lexeme_start lexbuf)
         (Lexing.lexeme_end lexbuf)

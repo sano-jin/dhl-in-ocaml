@@ -2,6 +2,7 @@
 
 open Syntax ;;
 
+  (*
 let (<.) f g = fun x -> f (g x)
 let flip f x y = f y x  
   
@@ -95,3 +96,4 @@ let rec eval_exp env exp =
        @@ Printf.printf "%s\n"
        @@ string_of_value
        @@ eval_exp env e
+   *)
