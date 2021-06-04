@@ -1,6 +1,6 @@
 # dhl-in-ocaml
 
-A Directed HyperLMNtal (DHLMNtal) interpreter written in OCaml.
+Directed HyperLMNtal (DHLMNtal) interpreter written in OCaml.
 
 ## How to use
 
