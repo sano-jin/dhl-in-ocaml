@@ -32,19 +32,19 @@ let rec string_of_proc priority = function
      let str_of_rule =
        string_of_proc 1 lhs ^ " :- " ^ string_of_proc 1 lhs
      in
-     if priority < 1 then "(" ^ str_of_rule ^ ")"
+     if priority > 1 then "(" ^ str_of_rule ^ ")"
      else str_of_rule
   | Mol (p, q) ->
-     let str_of_mol sep =
-       string_of_proc 2 p ^ sep ^ string_of_proc 2 q
+     let str_of_mol i sep =
+       string_of_proc i p ^ sep ^ string_of_proc i q
      in
-     if priority = 0 then str_of_mol "." ^ "."
-     else if priority < 2 then "(" ^ str_of_mol "," ^ ")" 
-     else str_of_mol ","
+     if priority = 0 then str_of_mol 0 ". "
+     else if priority > 2 then "(" ^ str_of_mol 2 ", " ^ ")" 
+     else str_of_mol 2 ", "
   | New (x, proc) ->
      let str_of_new = 
        "\\" ^ x ^ "." ^ string_of_proc 3 proc
      in
-     if priority < 3 then "(" ^ str_of_new ^ ")"
+     if priority > 3 then "(" ^ str_of_new ^ ")"
      else str_of_new
      

@@ -40,7 +40,7 @@ let show str =
   print_string str; str
 			  
 let exec =
-  show <. string_of_proc 0 <. parse <. show <. read_file
+  string_of_proc 0 <. parse <. read_file
 			  
 
 (*
