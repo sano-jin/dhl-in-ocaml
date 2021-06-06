@@ -1,18 +1,11 @@
 (* preprocess.ml *)
 
-open Syntax ;;
-
+open Syntax
+  
 let (<.) f g = fun x -> f (g x)
 let flip f x y = f y x  
-
-type link_info = {
-  link_id: int option; (* Some local_link_id | None *)
-  indeg: int;
-  has_incidence: bool; (* has_head *)
-}
-type free_link_env = (string * link_info) list  (* (link_name, link_info) list *)
-type local_link_env = (int * int) list          (* (link_id, indeg) *)
-				     
+let uncurry f x y = f (x, y)
+		   
 type arg' =
   | FreeLink of string
   | LocalLink of int
@@ -21,7 +14,89 @@ type arg' =
 type atom =
   | LocalInd of int * arg'
   | FreeInd of string * arg'
+			  
+let second f (a, b) = (a, f b)
+						      
+let rec prep_arg env = function
+  | Atom (p, xs) -> Atom' (p, List.map (prep_arg env) xs)
+  | Link x -> match List.assoc_opt x env with
+	      | None -> FreeLink x
+	      | Some i -> LocalLink i
+			  
+let rec prep env link_id = function
+  | Zero -> (link_id, [])
+  | Ind  (None, p) ->
+     (link_id + 1, [Either.Left (LocalInd (link_id, prep_arg env p))])
+  | Ind  (Some x, p) ->
+     (link_id,
+      [Either.Left (
+	   match List.assoc_opt x env with
+	   | None -> FreeInd (x, prep_arg env p)
+	   | Some i -> LocalInd (i, prep_arg env p)
+	 )])
+  | Mol  (p, q) ->
+     second List.concat @@ List.fold_left_map (prep env) link_id [p; q] 
+  | New  (x, p) ->
+     prep ((x, link_id)::env) (link_id + 1) p
+  | Rule (l, r) -> (link_id, [Either.Right (l, r)])
 
+(* returns the free/local head link names *)	     
+let check_univalent_atom (locals, frees) = function
+  | LocalInd (x, _) ->
+     if List.mem x locals then failwith @@ "local link appeared more than one"
+     else (x::locals, frees)
+  | FreeInd (x, _) ->
+     if List.mem x frees then failwith @@ "free link " ^ x ^ " appeared more than one"
+     else (locals, x::frees)
+
+let check_univalent = List.fold_left check_univalent_atom
+	    
+let rec update fallback f x = function
+  | [] -> fallback
+  | (y, v) as h::t ->
+     if x = y then (y, f v)::t
+     else h::update fallback f x t
+
+(* collect indeg and also check the serial condition*)
+let rec collect_indeg_arg ((locals, frees) as links) = function
+  | LocalLink x ->
+     (update (failwith @@ "not serial") succ x locals, frees)
+  | FreeLink x -> 
+     (locals, update ([x, 1]) succ x frees)
+  | Atom' (p, xs) ->
+     List.fold_left collect_indeg_arg links xs
+
+let collect_indeg_atom links = function
+  | LocalInd (_, p) -> collect_indeg_arg links p
+  | FreeInd (_, p) -> collect_indeg_arg links p     
+
+let collect_indeg = List.fold_left collect_indeg_atom 
+
+
+
+				   
+(*
+		    
+let check_serial locals atoms =
+  List.for_all (check_serial_arg locals) atoms
+ *)		     
+
+	       
+
+
+				   (*
+type link_info = {
+  link_id: int option; (* Some local_link_id | None *)
+  indeg: int;
+  has_incidence: bool; (* has_head *)
+}
+type free_link_env = (string * link_info) list  (* (link_name, link_info) list *)
+type local_link_env = (int * int) list          (* (link_id, indeg) *)
+				    *)				     
+
+
+
+				   (*
 type envs = {
    free_links: free_link_env;
    local_links: local_link_env;
@@ -35,37 +110,5 @@ type rule_set = (proc' * proc') list  (* (lhs, rhs) list *)
    envs: envs;
  }
 
-let second f (a, b) = (a, f b)
+				    *)
 
-let rec lookup_in_link_info x = function
-  | [] ->
-     let link_info = {link_id = None; indeg = 0; has_incidence = true}
-     in  (link_info, [(x, link_info)])
-  | (y, link_info) as h ::t ->
-     if x = y then
-       let link_info' =
-	 if link_info.has_incidence then failwith @@ "link " ^ x ^ " already has an incidence" 
-	 else {link_info with has_incidence = true}
-       in  (link_info', (y, link_info')::t)
-     else second (List.cons h) @@ lookup_in_link_info x t 
-
-			
-let prep_arg envs p = (envs, Atom' ("a", []))
-						      
-let rec prep acc = function
-  | Zero -> acc
-  | Ind  (None, p) ->
-     let envs = {acc.envs with 
-		  local_links = (acc.envs.link_id, 0)::acc.envs.local_links;
-		  link_id = acc.envs.link_id + 1}
-     in let (envs, p) = prep_arg envs p
-	in  {acc with atoms = LocalInd (acc.envs.link_id, p)::acc.atoms; envs = envs}
-  | Ind  (Some x, p) ->
-     let (link_info, free_links) = lookup_in_link_info x acc.envs.free_links
-     in  {acc with envs = {acc.envs with free_links = free_links}}
-  | Mol  (p, q) -> acc
-  | New  (x, p) -> acc
-  | Rule (l, r) -> acc
-	       
-
-	       
