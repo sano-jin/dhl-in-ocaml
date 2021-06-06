@@ -2,11 +2,16 @@
 
 open Syntax ;;
 
-  (*
 let (<.) f g = fun x -> f (g x)
 let flip f x y = f y x  
-  
+
+
+	       
 (* Some helper functions for dealing the environment *)
+
+ 
+	   
+(*
 
 let rec lookup var env =
   match env with

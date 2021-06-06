@@ -4,23 +4,26 @@ let value default = function
   | None -> default
   | Some s -> s		      
 		      
+(* argument of an atom *)
 type arg =
   | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
   | Link of string             (* link. e.g. X *)
 
 (* process *)
 type proc = 
-  | Rule of proc * proc         (* rule. e.g. a :- b. *)
+  | Zero
   | Ind of string option * arg  (* indirection. e.g. X -> a(Y) *)
   | Mol of proc * proc          (* molecule. e.g. (P, Q) *)  
-  | Zero
-  | New of string * proc
+  | New of string * proc        (* link creation. e.g. \X.P *)
+  | Rule of proc * proc         (* rule. e.g. P :- Q. *)
 
+		     
 let rec string_of_arg = function
   | Link x -> x
   | Atom (a, xs) ->
      if xs = [] then a 
-     else a ^ "(" ^ String.concat ", " (List.map string_of_arg xs) ^ ")"							       		      
+     else a ^ "(" ^ String.concat ", " (List.map string_of_arg xs) ^ ")"
+								       
 let rec string_of_proc priority = function
   | Zero -> ""
   | Ind (from, _to) ->
