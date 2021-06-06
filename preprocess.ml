@@ -49,7 +49,7 @@ let check_univalent_atom (locals, frees) = function
      if List.mem x frees then failwith @@ "free link " ^ x ^ " appeared more than one"
      else (locals, x::frees)
 
-let check_univalent = List.fold_left check_univalent_atom
+let check_univalent = List.fold_left check_univalent_atom ([], [])
 	    
 let rec update fallback f x = function
   | [] -> fallback
