@@ -29,5 +29,6 @@ R -> append(nil, L)
 
 \A.(
  A -> hoge(A, B, A)
+% A -> fuga
 ).
 

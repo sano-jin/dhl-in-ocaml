@@ -41,7 +41,11 @@ let show str =
 			  
 let exec =
   string_of_proc 0 <. parse <. read_file
-			  
+
+(*
+let test =
+  Preprocess.collect_link_info <. parse <. read_file
+ *)					       
 
 (*
 let () =
