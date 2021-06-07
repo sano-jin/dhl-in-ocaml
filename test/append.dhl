@@ -26,3 +26,8 @@ R -> append(cons(H, T), L)
 R -> append(nil, L)
 :- R -> L.
 
+
+\A.(
+ A -> hoge(A, B, A)
+).
+
