@@ -3,13 +3,12 @@
 open Syntax
   
 let (<.) f g = fun x -> f (g x)
-(*
-  let (<$) f a = let _ = f a in a
- *)
+(* let (<$) f a = let _ = f a in a *)
 let flip f x y = f y x  
 let uncurry f x y = f (x, y)
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
+let set_minus l r = List.filter (not <. flip List.mem r) l
 
 type local_link = int * string  (* (link_id, link_name_for_debugging) *)
 		       
@@ -67,7 +66,8 @@ let rec update fallback f x = function
 (* collect indeg and also check the serial condition*)
 let rec collect_indeg_arg ((locals, frees) as links) = function
   | LocalLink (x, link_name) ->
-     (update (fun _ -> failwith @@ "local link " ^ link_name ^ " is not serial") succ x locals, frees)
+     (update (fun _ -> failwith @@ "local link " ^ link_name ^ " is not serial") succ x locals,
+      frees)
   | FreeLink x -> 
      (locals, update (fun _ -> [x, 1]) succ x frees)
   | Atom' (p, xs) ->
@@ -85,14 +85,10 @@ let collect_link_info atoms =
     let map_pair_zero l = List.map (fun x -> (x, 0)) l in (* monomorphism restriction *)
     let init_indegs = first map_pair_zero @@ second map_pair_zero @@ links in
     collect_indeg init_indegs atoms
-  in
-  (indegs, free_incidences)
+  in (indegs, free_incidences)
 
-let set_minus l r = List.filter (not <. flip List.mem r) l
-
-				
-let check_link_cond ((lhs_atoms, (lhs_indegs, lhs_free_incidences)),
-		     (rhs_atoms, (rhs_indegs, rhs_free_incidences))) =
+let check_link_cond ((lhs_indegs, lhs_free_incidences),
+		     (rhs_indegs, rhs_free_incidences)) =
   let _ =
     let free_names = List.map fst <. snd in
     let unbound_rhs_links = set_minus (free_names rhs_indegs) (free_names lhs_indegs) in
@@ -106,7 +102,7 @@ let check_link_cond ((lhs_atoms, (lhs_indegs, lhs_free_incidences)),
     else ()
   in ()
 
-let check_rule ((lhs, lhs_rules), (rhs, rhs_rules)) =
+let check_rule (((_, lhs_links), lhs_rules), ((_, rhs_links), rhs_rules)) =
   let string_of_rules =
     String.concat ", " <. List.map @@ fun (l,r) -> string_of_proc 0 @@ Rule (l, r) in
   let _ = 
@@ -115,7 +111,7 @@ let check_rule ((lhs, lhs_rules), (rhs, rhs_rules)) =
     else if rhs_rules <> [] then
       failwith @@ "rule(s) " ^ string_of_rules rhs_rules ^ " on RHS (rules on RHS are not supported)"
     else () in
-  let _ = check_link_cond (lhs, rhs) in 
+  let _ = check_link_cond (lhs_links, rhs_links) in 
   ()    
 
 let prep proc =
@@ -129,5 +125,3 @@ let prep_rule (lhs, rhs) =
 
 let preprocess = second @@ List.map prep_rule <. prep
   
-
-    
