@@ -3,6 +3,9 @@
 open Syntax
   
 let (<.) f g = fun x -> f (g x)
+(*
+  let (<$) f a = let _ = f a in a
+ *)
 let flip f x y = f y x  
 let uncurry f x y = f (x, y)
 let second f (a, b) = (a, f b)
@@ -60,7 +63,6 @@ let rec update fallback f x = function
      if x = y then (y, f v)::t
      else h::update fallback f x t
 
-
 		    
 (* collect indeg and also check the serial condition*)
 let rec collect_indeg_arg ((locals, frees) as links) = function
@@ -104,8 +106,7 @@ let check_link_cond ((lhs_atoms, (lhs_indegs, lhs_free_incidences)),
     else ()
   in ()
 
-let check_rule ((lhs, lhs_rules),
-		(rhs, rhs_rules)) =
+let check_rule ((lhs, lhs_rules), (rhs, rhs_rules)) =
   let string_of_rules =
     String.concat ", " <. List.map @@ fun (l,r) -> string_of_proc 0 @@ Rule (l, r) in
   let _ = 
@@ -117,7 +118,7 @@ let check_rule ((lhs, lhs_rules),
   let _ = check_link_cond (lhs, rhs) in 
   ()    
 
-let prep (proc: Syntax.proc) =
+let prep proc =
   let atoms, rules = List.partition_map (fun x -> x) @@ snd @@ prep_atoms [] 0 proc in 
   ((atoms, collect_link_info atoms), rules)
     
@@ -126,4 +127,7 @@ let prep_rule (lhs, rhs) =
   let _ = check_rule rule in
   rule
 
+let preprocess = second @@ List.map prep_rule <. prep
+  
 
+    
