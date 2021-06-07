@@ -1,15 +1,8 @@
 (* preprocess.ml *)
 
 open Syntax
-  
-let (<.) f g = fun x -> f (g x)
-(* let (<$) f a = let _ = f a in a *)
-let flip f x y = f y x  
-let uncurry f x y = f (x, y)
-let second f (a, b) = (a, f b)
-let first f (a, b) = (f a, b)
-let set_minus l r = List.filter (not <. flip List.mem r) l
-
+open Util
+       
 type local_link = int * string  (* (link_id, link_name_for_debugging) *)
 		       
 type arg' =
@@ -31,7 +24,7 @@ let rec prep_arg env = function
 let rec prep_atoms env link_id = function
   | Zero -> (link_id, [])
   | Ind  (None, p) ->
-     (link_id + 1, [Either.Left (LocalInd ((link_id, ""), prep_arg env p))])
+     (succ link_id, [Either.Left (LocalInd ((link_id, ""), prep_arg env p))])
   | Ind  (Some x, p) ->
      (link_id,
       [Either.Left (
@@ -42,7 +35,7 @@ let rec prep_atoms env link_id = function
   | Mol  (p, q) ->
      second List.concat @@ List.fold_left_map (prep_atoms env) link_id [p; q] 
   | New  (x, p) ->
-     prep_atoms ((x, link_id)::env) (link_id + 1) p
+     prep_atoms ((x, link_id)::env) (succ link_id) p
   | Rule (l, r) -> (link_id, [Either.Right (l, r)])
 
 (* returns the free/local head link names *)	     
@@ -59,9 +52,8 @@ let collect_in_link = List.fold_left collect_in_link_atom ([], [])
 let rec update fallback f x = function
   | [] -> fallback ()
   | (y, v) as h::t ->
-     if x = y then (y, f v)::t
+     if x = y then (y, f v) :: t
      else h::update fallback f x t
-
 		    
 (* collect indeg and also check the serial condition*)
 let rec collect_indeg_arg ((locals, frees) as links) = function
@@ -89,30 +81,25 @@ let collect_link_info atoms =
 
 let check_link_cond ((lhs_indegs, lhs_free_incidences),
 		     (rhs_indegs, rhs_free_incidences)) =
-  let _ =
-    let free_names = List.map fst <. snd in
-    let unbound_rhs_links = set_minus (free_names rhs_indegs) (free_names lhs_indegs) in
-    if unbound_rhs_links <> [] then
-      failwith @@ "link(s) " ^ String.concat ", " unbound_rhs_links ^ " on RHS has/have not appeared on LHS"
-    else () in
-  let _ =
-    let unredired = set_minus lhs_free_incidences rhs_free_incidences in
-    if unredired <> [] then 
-      failwith @@ "link(s) " ^ String.concat ", " unredired ^ " on LHS is/are not redirected on RHS"
-    else ()
-  in ()
+  let free_names = List.map fst <. snd in
+  let unbound_rhs_links = set_minus (free_names rhs_indegs) (free_names lhs_indegs) in
+  if unbound_rhs_links <> [] then
+    failwith @@ "link(s) " ^ String.concat ", " unbound_rhs_links ^ " on RHS has/have not appeared on LHS"
+  else ();
+  let unredired = set_minus lhs_free_incidences rhs_free_incidences in
+  if unredired <> [] then 
+    failwith @@ "link(s) " ^ String.concat ", " unredired ^ " on LHS is/are not redirected on RHS"
+  else ()
 
 let check_rule (((_, lhs_links), lhs_rules), ((_, rhs_links), rhs_rules)) =
   let string_of_rules =
     String.concat ", " <. List.map @@ fun (l,r) -> string_of_proc 0 @@ Rule (l, r) in
-  let _ = 
-    if lhs_rules <> [] then
-      failwith @@ "rule(s) " ^ string_of_rules lhs_rules ^ " on LHS"
-    else if rhs_rules <> [] then
-      failwith @@ "rule(s) " ^ string_of_rules rhs_rules ^ " on RHS (rules on RHS are not supported)"
-    else () in
-  let _ = check_link_cond (lhs_links, rhs_links) in 
-  ()    
+  if lhs_rules <> [] then
+    failwith @@ "rule(s) " ^ string_of_rules lhs_rules ^ " on LHS"
+  else if rhs_rules <> [] then
+    failwith @@ "rule(s) " ^ string_of_rules rhs_rules ^ " on RHS (rules on RHS are not supported)"
+  else ();
+  check_link_cond (lhs_links, rhs_links)
 
 let prep proc =
   let atoms, rules = List.partition_map (fun x -> x) @@ snd @@ prep_atoms [] 0 proc in 
@@ -120,8 +107,7 @@ let prep proc =
     
 let prep_rule (lhs, rhs) =
   let rule = (prep lhs, prep rhs) in
-  let _ = check_rule rule in
-  rule
+  check_rule rule; rule
 
 let preprocess = second @@ List.map prep_rule <. prep
   

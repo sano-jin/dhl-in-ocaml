@@ -1,6 +1,7 @@
 (* main.ml *)
 
-open Syntax ;;
+open Syntax
+open Util
 (* 
 open Eval ;; 
 *)
@@ -13,23 +14,7 @@ let parse str =
 (*
 let run str = 
   eval_stmt [] (parse str)
- *)
-
-(* read lines from the given file *)
-let read_file name : string =
-  let ic = open_in name in
-  let try_read () =
-    try Some (input_line ic) with End_of_file -> None in
-  let rec loop acc = match try_read () with
-    | Some s -> loop (s :: acc)
-    | None ->
-       close_in ic;
-       String.concat "\n" @@ List.rev @@ "" :: acc
-  in
-  loop []
-
-let (<.) f g = fun x -> f (g x)
-       
+ *)       
 
 (*
 let exec =
@@ -42,10 +27,8 @@ let show str =
 let exec =
   string_of_proc 0 <. parse <. read_file
 
-(*
 let test =
-  Preprocess.collect_link_info <. parse <. read_file
- *)					       
+  Preprocess.preprocess <. parse <. read_file
 
 (*
 let () =
