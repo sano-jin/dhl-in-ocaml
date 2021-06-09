@@ -2,14 +2,28 @@
 
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
+let (>>=) = Option.bind
+let (<$>) = Option.map
+let (<::>) h t = List.cons h <$> t
 let flip f x y = f y x  
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
 let set_minus l r = List.filter (not <. flip List.mem r) l
 let id x = x
 let partitionEithers l = List.partition_map id l (* monomorphism restriction *)
-					   
-					    
+let curry f x y = f (x, y)
+let uncurry f (x, y) = f x y
+let rec zip = function
+  | ([], []) -> Some []
+  | (xh::xt, yh::yt) -> (xh, yh) <::> zip (xt, yt)
+  | _ -> None
+
+let rec curried_zip t = curry zip t
+	   
+let rec fold_maybe f acc = function
+  | [] -> Some acc
+  | h::t -> f acc h >>= fun acc' -> fold_maybe f acc' t
+
 (* 
 let (<$) f a = let _ = f a in a
 let uncurry f x y = f (x, y)
