@@ -84,5 +84,5 @@ let rec check_arg (locals, frees) env node_ref = function
 	     check_arg (locals, frees) env node_ref atom
 	  | VMAtom (q, ys) ->
 	     if p <> q then None (* different atom name *)
-	     else curried_zip ys xs >>= fold_maybe (uncurry <. check_arg (locals, frees)) env 
+	     else zip ys xs >>= fold_maybe (uncurry <. check_arg (locals, frees)) env 
      

@@ -13,16 +13,16 @@ let id x = x
 let partitionEithers l = List.partition_map id l (* monomorphism restriction *)
 let curry f x y = f (x, y)
 let uncurry f (x, y) = f x y
-let rec zip = function
+let rec uncurried_zip = function
   | ([], []) -> Some []
-  | (xh::xt, yh::yt) -> (xh, yh) <::> zip (xt, yt)
+  | (xh::xt, yh::yt) -> (xh, yh) <::> uncurried_zip (xt, yt)
   | _ -> None
 
-let rec curried_zip t = curry zip t
+let rec zip t = curry uncurried_zip t
 	   
 let rec fold_maybe f acc = function
   | [] -> Some acc
-  | h::t -> f acc h >>= fun acc' -> fold_maybe f acc' t
+  | h::t -> f acc h >>= flip (fold_maybe f) t
 
 (* 
 let (<$) f a = let _ = f a in a
