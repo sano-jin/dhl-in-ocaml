@@ -11,5 +11,5 @@ type inst =
   | IndegLe of int * int             (* IndegLe (atom_reg_i, indeg) *)
   | IndegEq of int * int             (* IndegEq (atom_reg_i, indeg) *)
   | Func of int * string * int       (* Func (atom_reg_i, atom_name, arity) *)
-      
+        
       

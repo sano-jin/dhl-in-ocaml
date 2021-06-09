@@ -6,6 +6,8 @@ let flip f x y = f y x
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
 let set_minus l r = List.filter (not <. flip List.mem r) l
+let id x = x
+let partitionEithers l = List.partition_map id l (* monomorphism restriction *)
 
 (* 
 let (<$) f a = let _ = f a in a

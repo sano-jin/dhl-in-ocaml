@@ -28,7 +28,7 @@ let exec =
   string_of_proc 0 <. parse <. read_file
 
 let test =
-  Preprocess.preprocess <. parse <. read_file
+  Preprocess.prep <. parse <. read_file
 
 (*
 let () =

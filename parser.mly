@@ -50,7 +50,8 @@ args_inner:
 arg:
   | LinkName { Link $1 }
   | atom { $1 }
-  
+;
+    
 // atom
 atom:
   // a

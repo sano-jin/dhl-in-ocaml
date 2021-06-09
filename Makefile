@@ -2,8 +2,8 @@
 # Makefile
 #
 
-SRC= util.ml syntax.ml parser.mly lexer.mll preprocess.ml compile.ml eval.ml main.ml 
-COMPONENT= util.ml syntax.ml parser.mli parser.ml lexer.ml preprocess.ml compile.ml eval.ml main.ml 
+SRC= util.ml syntax.ml parser.mly lexer.mll preprocess.ml vm.ml compile.ml eval.ml main.ml 
+COMPONENT= util.ml syntax.ml parser.mli parser.ml lexer.ml preprocess.ml vm.ml compile.ml eval.ml main.ml 
 TARGET= dhl
 
 all:	$(TARGET)

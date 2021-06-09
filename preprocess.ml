@@ -2,7 +2,7 @@
 
 open Syntax
 open Util
-       
+
 type local_link = int * string  (* (link_id, link_name_for_debugging) *)
 		       
 type arg' =
@@ -10,10 +10,14 @@ type arg' =
   | LocalLink of local_link
   | Atom' of string * arg' list
 
-type atom =
+type root_atom =
   | LocalInd of local_link * arg'
   | FreeInd of string * arg'
 			  
+type atoms = root_atom list
+type link_info = ((int * int) list * (string * int) list ) * string list
+type rule = Rule' of (((atoms * link_info) * rule list) * ((atoms * link_info) * rule list))
+
 						      
 let rec prep_arg env = function
   | Atom (p, xs) -> Atom' (p, List.map (prep_arg env) xs)
@@ -39,7 +43,7 @@ let rec prep_atoms env link_id = function
   | Rule (l, r) -> (link_id, [Either.Right (l, r)])
 
 (* returns the free/local head link names *)	     
-let collect_in_link_atom (locals, frees) = function
+let collect_incidence (locals, frees) = function
   | LocalInd ((x, link_name), _) ->
      if List.mem x locals then failwith @@ "local link " ^ link_name ^ " is not univalent"
      else (x::locals, frees)
@@ -47,7 +51,7 @@ let collect_in_link_atom (locals, frees) = function
      if List.mem x frees then failwith @@ "free link " ^ x ^ " is not univalent "
      else (locals, x::frees)
 
-let collect_in_link = List.fold_left collect_in_link_atom ([], [])
+let collect_incidences = List.fold_left collect_incidence ([], [])
 	    
 let rec update fallback f x = function
   | [] -> fallback ()
@@ -58,25 +62,24 @@ let rec update fallback f x = function
 (* collect indeg and also check the serial condition*)
 let rec collect_indeg_arg ((locals, frees) as links) = function
   | LocalLink (x, link_name) ->
-     (update (fun _ -> failwith @@ "local link " ^ link_name ^ " is not serial") succ x locals,
-      frees)
+     (update (fun _ -> failwith @@ link_name ^ " is not serial") succ x locals, frees)
   | FreeLink x -> 
      (locals, update (fun _ -> [x, 1]) succ x frees)
   | Atom' (p, xs) ->
      List.fold_left collect_indeg_arg links xs
 
-let collect_indeg_atom links = function
+let collect_indeg links = function
   | LocalInd (_, p) -> collect_indeg_arg links p
   | FreeInd  (_, p) -> collect_indeg_arg links p     
 
-let collect_indeg = List.fold_left collect_indeg_atom 
+let collect_indegs = List.fold_left collect_indeg
 
 let collect_link_info atoms =
-  let (_, free_incidences) as links = collect_in_link atoms in
-  let indegs = 
-    let map_pair_zero l = List.map (fun x -> (x, 0)) l in (* monomorphism restriction *)
-    let init_indegs = first map_pair_zero @@ second map_pair_zero @@ links in
-    collect_indeg init_indegs atoms
+  let (_, free_incidences) as links = collect_incidences atoms in
+  let indegs =
+    let zip_zero l = List.map (fun x -> (x, 0)) l in (* monomorphism restriction *)
+    let init_indegs = first zip_zero @@ second zip_zero @@ links in
+    collect_indegs init_indegs atoms
   in (indegs, free_incidences)
 
 let check_link_cond ((lhs_indegs, lhs_free_incidences),
@@ -92,22 +95,14 @@ let check_link_cond ((lhs_indegs, lhs_free_incidences),
   else ()
 
 let check_rule (((_, lhs_links), lhs_rules), ((_, rhs_links), rhs_rules)) =
-  let string_of_rules =
-    String.concat ", " <. List.map @@ fun (l,r) -> string_of_proc 0 @@ Rule (l, r) in
-  if lhs_rules <> [] then
-    failwith @@ "rule(s) " ^ string_of_rules lhs_rules ^ " on LHS"
-  else if rhs_rules <> [] then
-    failwith @@ "rule(s) " ^ string_of_rules rhs_rules ^ " on RHS (rules on RHS are not supported)"
-  else ();
-  check_link_cond (lhs_links, rhs_links)
+  if lhs_rules <> [] then failwith @@ "rule(s) on LHS"
+  else if rhs_rules <> [] then failwith @@ "rule(s) on RHS is not supported ..."
+  else check_link_cond (lhs_links, rhs_links)
 
-let prep proc =
-  let atoms, rules = List.partition_map (fun x -> x) @@ snd @@ prep_atoms [] 0 proc in 
-  ((atoms, collect_link_info atoms), rules)
-    
-let prep_rule (lhs, rhs) =
+let rec prep proc =
+  let atoms, rules = partitionEithers @@ snd @@ prep_atoms [] 0 proc in 
+  ((atoms, collect_link_info atoms), List.map prep_rule rules)
+and prep_rule (lhs, rhs) =
   let rule = (prep lhs, prep rhs) in
-  check_rule rule; rule
-
-let preprocess = second @@ List.map prep_rule <. prep
-  
+  check_rule rule;
+  Rule' rule
