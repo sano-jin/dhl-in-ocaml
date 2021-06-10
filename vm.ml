@@ -8,8 +8,8 @@ type vm_atom =
   | VMInd of node_ref
  and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
 
-let null: node_ref = ref (0, VMAtom ("Null", [])) 
-
+let null_ptr: node_ref = ref (0, VMAtom ("Null", []))
+    
 (* atom list *)
 type atom_list = node_ref list
 
@@ -37,52 +37,84 @@ type env = {
      * That is, matching free links will consume the indegrees in this map
      * Notice the indegrees should be kept as non-negative value. *)
     free_addr2indeg: (node_ref * int) list;
-
 }
 
-let rec update_assoc fallback pred f = function
-  | [] -> fallback
+let rec update_assc_opt fallback pred f = function
+  | [] -> fallback ()
   | (y, v) as h::t ->
-     if pred y then (fun s -> (y, s)::t) <$> f v
-     else h <::> update_assoc fallback pred f t
+     if pred y then flip List.cons t <. pair y <$> f v
+     else h <::> update_assc_opt fallback pred f t
 
-let decr_indeg diff old =
-  if old < diff then None else Some (old - diff)
+let safe_minus x y =
+  if x < y then None else Some (x - y)
 
-let rec check_arg (locals, frees) env node_ref = function
+let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = function
   | FreeLink x ->
-     begin
-       let indeg = List.assoc x frees in
-       let update_free_addr2indeg fallback =
-	 update_assoc fallback ((==) node_ref) (decr_indeg indeg) env.free_addr2indeg
-       in
-       match List.assoc_opt x env.free2addr with 
-       | None -> (* if the free link name has not mathced to any address *)
-	  (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
-	  <$> update_free_addr2indeg @@
-	    let new_indeg = fst !node_ref - indeg in
-	    if new_indeg < 0 then None
-	    else Some [(node_ref, new_indeg)]
-       | Some addr ->   (* if the free link name has already mathced to the address *)
-	  if addr != node_ref then None (* not univalent *)
-	  else (fun s -> {env with free_addr2indeg = s})
-	       <$> update_free_addr2indeg @@ failwith @@ "not found"
-     end
+       begin
+	 let indeg = List.assoc x free_indegs in
+	 let update_free_addr2indeg fallback =
+	   update_assc_opt (fun _ -> fallback) ((==) node_ref) (flip safe_minus indeg) env.free_addr2indeg
+	 in
+	 match List.assoc_opt x env.free2addr with 
+	 | None -> (* if the free link name has not mathced to any address *)
+	    if List.memq node_ref env.local_addrs then None (* Already matched with a local link *)
+	    else 
+	      (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
+	      <$> update_free_addr2indeg @@
+		    let new_indeg = fst !node_ref - indeg in
+		    if new_indeg < 0 then None
+		    else Some [(node_ref, new_indeg)]
+	 | Some addr ->   (* if the free link name has already mathced to the address *)
+	    if addr != node_ref then None (* not univalent *)
+	    else (fun s -> {env with free_addr2indeg = s})
+		 <$> update_free_addr2indeg @@ failwith @@ "Bug: not found"
+       end
   | LocalLink (x, _) ->
      begin
        match List.assoc_opt x env.local2addr with 
-       | None -> if List.assoc x locals <> fst !node_ref then None (* indeg did not match *)
+       | None -> if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *)
+		 else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match *)
 		 else Some {env with local2addr = (x, node_ref)::env.local2addr; local_addrs = node_ref::env.local_addrs}
        | Some addr -> if node_ref != addr then None (* local link matched to different addrs *)
 		      else Some env
      end	 
-  | Atom' (p, xs) as atom ->
-     if List.memq node_ref env.local_addrs then None (* already matched addr  *)
-     else if fst !node_ref <> 1 then None (* indeg did not match *)
-     else match snd !node_ref with
-	  | VMInd next -> (* node_ref := !next; (* path compression *) *)
-	     check_arg (locals, frees) env node_ref atom
-	  | VMAtom (q, ys) ->
-	     if p <> q then None (* different atom name *)
-	     else zip ys xs >>= fold_maybe (uncurry <. check_arg (locals, frees)) env 
-     
+  | Atom' (p, xs) ->
+     check_atom indegs env node_ref ((=) 1) (p, xs)
+and check_atom indegs env node_ref indeg_pred (p, xs) =
+  if List.memq node_ref env.local_addrs then None (* already matched addr  *)
+  (* else if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *) *)
+  else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match *)
+  else match snd !node_ref with
+       | VMInd next ->
+	  node_ref := !next; (* path compression *)
+	  check_atom indegs env node_ref indeg_pred (p, xs)
+       | VMAtom (q, ys) ->
+	  if p <> q then None (* different atom name *)
+	  else zip ys xs
+	       >>= fold_maybe (uncurry <. check_arg indegs)
+			      {env with local_addrs = node_ref::env.local_addrs} 					
+
+			      
+let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
+  | LocalInd ((x, _), Atom' (p, xs)) ->
+     if List.mem_assoc x env.local2addr then failwith @@ "Bug: can deref"
+     else check_atom indegs {env with local2addr = (x, node_ref)::env.local2addr}
+		     node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
+  | FreeInd (x, Atom' (p, xs)) ->
+     begin
+       let indeg = List.assoc x free_indegs in
+       let env = {env with free2addr = (x, node_ref)::env.free2addr} in
+       if List.mem_assoc x env.free2addr then failwith @@ "Bug: can deref"
+       else update_assc_opt
+	      (* has not mathced with the other free link *)
+	      (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
+	      ((==) node_ref)
+	      (flip safe_minus indeg) env.free_addr2indeg
+	    >>= fun free_addr2indeg -> 
+	    check_atom indegs {env with free_addr2indeg = free_addr2indeg}
+		       node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
+     end  
+  | _ -> failwith @@ "Indirection on LHS is not supported"
+
+
+		       

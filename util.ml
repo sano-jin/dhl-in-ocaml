@@ -24,6 +24,18 @@ let rec fold_maybe f acc = function
   | [] -> Some acc
   | h::t -> f acc h >>= flip (fold_maybe f) t
 
+let rec list_eq l r = match (l, r) with
+  | ([], []) -> true
+  | (xh::xt, yh::yt) -> xh = yh || list_eq xt yt
+  | _ -> false
+			     
+let sym_diff l r =
+  set_minus l r @ set_minus r l
+
+let pair x y = (x, y)
+let const x y = x
+let list_singleton x = [x]
+		  
 (* 
 let (<$) f a = let _ = f a in a
 let uncurry f x y = f (x, y)
