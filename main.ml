@@ -34,21 +34,24 @@ let find_atoms file_name atom_list =
   let Preprocess.Rule' (((atoms, (indegs, _)), _), _) = List.hd @@ snd @@ prep file_name in
   Vm.find_atoms indegs atom_list atoms 
 
+let test_atom_list =
+  Vm.test_atom2atom_list @@
+    Vm.TAtom ("test", [
+		 Vm.TAtom ("append", [
+			      Vm.TAtom ("cons", [
+					   Vm.TAtom ("a", []);
+					   Vm.TAtom ("nil", [])
+					 ]);
+			      Vm.TAtom ("cons", [
+					   Vm.TAtom ("cons", []);
+					   Vm.TAtom ("nil", [])
+					 ])
+			    ])
+	       ])
+
+		
 let test =
-  flip find_atoms @@
-    Vm.test_atom2atom_list @@
-      Vm.TAtom ("test", [
-		   Vm.TAtom ("append", [
-				Vm.TAtom ("cons", [
-					     Vm.TAtom ("a", []);
-					     Vm.TAtom ("nil", [])
-					   ]);
-				Vm.TAtom ("cons", [
-					     Vm.TAtom ("cons", []);
-					     Vm.TAtom ("nil", [])
-					   ])
-			      ])
-		 ])
+  flip find_atoms test_atom_list
   
 (*
 
