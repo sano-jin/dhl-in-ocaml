@@ -44,11 +44,6 @@ let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = functio
 	      (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
 	      <$> update_free_addr2indeg @@
 		    (flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
-			       (*
-		    let new_indeg = fst !node_ref - indeg in
-		    if new_indeg < 0 then None
-		    else Some [(node_ref, new_indeg)]
-				*)
 	 | Some addr ->   (* if the free link name has already mathced to the address *)
 	    if addr != node_ref then None (* not univalent *)
 	    else (fun s -> {env with free_addr2indeg = s})

@@ -3,6 +3,7 @@
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
 let (>>=) = Option.bind
+let (=<<) = flip Option.bind
 let (<$>) = Option.map
 let (<::>) h t = List.cons h <$> t
 let flip f x y = f y x  
