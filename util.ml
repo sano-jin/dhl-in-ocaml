@@ -34,7 +34,7 @@ let sym_diff l r =
 
 let pair x y = (x, y)
 let const x y = x
-let list_singleton x = [x]
+(* let list_singleton x = [x] *)
 		  
 (* 
 let (<$) f a = let _ = f a in a
