@@ -1,6 +1,6 @@
 (* findatom.ml *)
 
-open Preprocess
+open Compile
 open Util
 open Vm
        
@@ -50,9 +50,9 @@ and check_atom indegs env node_ref indeg_pred (p, xs) =
 
 			      
 let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
-  | LocalInd ((x, _), Atom' (p, xs)) ->
+  | CLocalInd (x, (p, xs)) ->
      check_atom indegs {env with local2addr = insert x node_ref env.local2addr}
-		     node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
+		node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
   | FreeInd (x, Atom' (p, xs)) ->
      begin
        let indeg = List.assoc x free_indegs in

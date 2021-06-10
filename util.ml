@@ -12,6 +12,7 @@ let rec foldM f acc = function
      
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
+let swap (a, b) = (b, a)
 let set_minus l r = List.filter (not <. flip List.mem r) l
 let id x = x
 let partitionEithers l = List.partition_map id l (* monomorphism restriction *)

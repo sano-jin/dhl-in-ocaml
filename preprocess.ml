@@ -81,28 +81,3 @@ let collect_link_info atoms =
     let init_indegs = first zip_zero @@ second zip_zero @@ links in
     collect_indegs init_indegs atoms
   in (indegs, free_incidences)
-
-let check_link_cond ((lhs_indegs, lhs_free_incidences),
-		     (rhs_indegs, rhs_free_incidences)) =
-  let free_names = List.map fst <. snd in
-  let unbound_rhs_links = set_minus (free_names rhs_indegs) (free_names lhs_indegs) in
-  if unbound_rhs_links <> [] then
-    failwith @@ "link(s) " ^ String.concat ", " unbound_rhs_links ^ " on RHS has/have not appeared on LHS"
-  else ();
-  let unredired = set_minus lhs_free_incidences rhs_free_incidences in
-  if unredired <> [] then 
-    failwith @@ "link(s) " ^ String.concat ", " unredired ^ " on LHS is/are not redirected on RHS"
-  else ()
-
-let check_rule (((_, lhs_links), lhs_rules), ((_, rhs_links), rhs_rules)) =
-  if lhs_rules <> [] then failwith @@ "rule(s) on LHS"
-  else if rhs_rules <> [] then failwith @@ "rule(s) on RHS is not supported ..."
-  else check_link_cond (lhs_links, rhs_links)
-
-let rec prep proc =
-  let atoms, rules = partitionEithers @@ snd @@ prep_atoms [] 0 proc in 
-  ((atoms, collect_link_info atoms), List.map prep_rule rules)
-and prep_rule (lhs, rhs) =
-  let rule = (prep lhs, prep rhs) in
-  check_rule rule;
-  PRule rule
