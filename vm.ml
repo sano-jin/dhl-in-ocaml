@@ -10,15 +10,6 @@ type vm_atom =
 
 let null_ptr: node_ref = ref (0, VMAtom ("Null", []))
     
-(* atom list *)
-type atom_list = node_ref list
-
-(* atom register *)
-type atom_reg = node_ref list
-
-(* indeg register *)
-type indeg_reg = (int * int) list     (* (address, indeg) list *)
-
 type env = {
     (* A set of the addresses which local links have matched.
      * Containes the addresses to the "embedded atom"s. *)
@@ -39,15 +30,6 @@ type env = {
     free_addr2indeg: (node_ref * int) list;
 }
 
-let rec update_assc_opt fallback pred f = function
-  | [] -> fallback ()
-  | (y, v) as h::t ->
-     if pred y then flip List.cons t <. pair y <$> f v
-     else h <::> update_assc_opt fallback pred f t
-
-let safe_minus x y =
-  if x < y then None else Some (x - y)
-
 let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = function
   | FreeLink x ->
        begin
@@ -61,9 +43,12 @@ let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = functio
 	    else 
 	      (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
 	      <$> update_free_addr2indeg @@
+		    (flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
+			       (*
 		    let new_indeg = fst !node_ref - indeg in
 		    if new_indeg < 0 then None
 		    else Some [(node_ref, new_indeg)]
+				*)
 	 | Some addr ->   (* if the free link name has already mathced to the address *)
 	    if addr != node_ref then None (* not univalent *)
 	    else (fun s -> {env with free_addr2indeg = s})
@@ -97,24 +82,33 @@ and check_atom indegs env node_ref indeg_pred (p, xs) =
 			      
 let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
   | LocalInd ((x, _), Atom' (p, xs)) ->
-     if List.mem_assoc x env.local2addr then failwith @@ "Bug: can deref"
-     else check_atom indegs {env with local2addr = (x, node_ref)::env.local2addr}
+     check_atom indegs {env with local2addr = insert x node_ref env.local2addr}
 		     node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
   | FreeInd (x, Atom' (p, xs)) ->
      begin
        let indeg = List.assoc x free_indegs in
-       let env = {env with free2addr = (x, node_ref)::env.free2addr} in
-       if List.mem_assoc x env.free2addr then failwith @@ "Bug: can deref"
-       else update_assc_opt
-	      (* has not mathced with the other free link *)
-	      (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
-	      ((==) node_ref)
-	      (flip safe_minus indeg) env.free_addr2indeg
-	    >>= fun free_addr2indeg -> 
-	    check_atom indegs {env with free_addr2indeg = free_addr2indeg}
-		       node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
+       let env = {env with free2addr = insert x node_ref env.free2addr} in
+       update_assc_opt
+	 (* has not mathced with the other free link *)
+	 (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
+	 ((==) node_ref)
+	 (flip safe_minus indeg) env.free_addr2indeg
+       >>= fun free_addr2indeg -> 
+       check_atom indegs {env with free_addr2indeg = free_addr2indeg}
+		  node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
      end  
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
+let find_atom indegs env atom_list =
+  let try_deref x link2addr ind =
+    match List.assoc_opt x link2addr with
+    | None -> one_of (flip (check_ind indegs env) ind) atom_list
+    | Some node_ref -> check_ind indegs env node_ref ind
+  in	 
+  function
+  | LocalInd ((x, _), _) as ind -> try_deref x env.local2addr ind 
+  | FreeInd (x, _) as ind -> try_deref x env.free2addr ind 
 
-		       
+				       
+
+				       

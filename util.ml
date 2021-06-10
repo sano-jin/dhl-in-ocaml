@@ -34,6 +34,35 @@ let sym_diff l r =
 
 let pair x y = (x, y)
 let const x y = x
+
+let (<|>) l f = 
+  if Option.is_some l then l
+  else f ()
+		  
+let rec one_of f = function
+  | [] -> None
+  | h::t -> f h <|> fun _ -> one_of f t
+
+let rec insert x v = function
+  | [] -> [(x, v)]
+  | (y, w) as h ::t ->
+     if x = y then
+       if v <> w then failwith @@ "Bug: updating"
+       else (x, v)::t
+     else h::insert x v t
+
+let rec update_assc_opt fallback pred f = function
+  | [] -> fallback ()
+  | (y, v) as h ::t ->
+     if pred y then flip List.cons t <. pair y <$> f v
+     else h <::> update_assc_opt fallback pred f t
+
+let safe_minus x y =
+  if x < y then None else Some (x - y)
+
+
+		    
+		    
 (* let list_singleton x = [x] *)
 		  
 (* 
