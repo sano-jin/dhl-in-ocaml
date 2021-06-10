@@ -30,6 +30,9 @@ type env = {
     free_addr2indeg: (node_ref * int) list;
 }
 
+let empty_env =
+  {local_addrs = []; local2addr = []; free2addr = []; free_addr2indeg = []}
+	     
 let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = function
   | FreeLink x ->
        begin
@@ -104,5 +107,19 @@ let find_atom indegs env atom_list =
   | LocalInd ((x, _), _) as ind -> try_deref x env.local2addr ind 
   | FreeInd (x, _) as ind -> try_deref x env.free2addr ind 
 
-let find_atoms env = flip foldM env <.. flip <. find_atom
+let find_atoms = flip foldM empty_env <.. flip <. find_atom
 				       
+type test_atom =
+  | TAtom of string * test_atom list
+
+let test_atom2atom_list =
+  let rec helper acc = function
+    | TAtom (p, xs) ->
+       let (acc, xs) = List.fold_left_map helper acc xs in
+       let node_ref = ref (1, VMAtom (p, xs)) in
+       (node_ref::acc, node_ref)
+  in fst <. helper []
+				
+		
+
+						    
