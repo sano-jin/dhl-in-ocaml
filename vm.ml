@@ -91,7 +91,7 @@ let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = functio
        >>= fun free_addr2indeg -> 
        check_atom indegs {env with free_addr2indeg = free_addr2indeg}
 		  node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
-     end  
+     end
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 let find_atom indegs env atom_list =
@@ -104,6 +104,5 @@ let find_atom indegs env atom_list =
   | LocalInd ((x, _), _) as ind -> try_deref x env.local2addr ind 
   | FreeInd (x, _) as ind -> try_deref x env.free2addr ind 
 
-				       
-
+let find_atoms env = flip foldM env <.. flip <. find_atom
 				       

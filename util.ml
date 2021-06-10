@@ -3,10 +3,13 @@
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
 let (>>=) = Option.bind
-let (=<<) = flip Option.bind
 let (<$>) = Option.map
 let (<::>) h t = List.cons h <$> t
 let flip f x y = f y x  
+let rec foldM f acc = function
+  | [] -> Some acc
+  | h::t -> f acc h >>= flip (foldM f) t
+     
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
 let set_minus l r = List.filter (not <. flip List.mem r) l
