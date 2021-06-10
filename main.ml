@@ -32,7 +32,7 @@ let prep =
 
 let find_atoms file_name atom_list =
   let Preprocess.Rule' (((atoms, (indegs, _)), _), _) = List.hd @@ snd @@ prep file_name in
-  Vm.find_atoms indegs atom_list atoms 
+  Findatom.find_atoms indegs atom_list atoms 
 
 let test_atom_list =
   Vm.test_atom2atom_list @@
@@ -49,7 +49,9 @@ let test_atom_list =
 			    ])
 	       ])
 
-		
+let dump =
+  Vm.dump_atoms test_atom_list
+    
 let test =
   flip find_atoms test_atom_list
   

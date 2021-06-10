@@ -10,26 +10,47 @@ type vm_atom =
 
 let null_ptr: node_ref = ref (0, VMAtom ("Null", []))
 
-let 			     
-			     
-let string_of_vm_atom (dumped_nodes, ref2link_id (* the number corresponds to the printed link id *)) node_ref =
+let get_addr ((ref2link_id, link_id) as env) node_ref =
+  match List.assq_opt node_ref ref2link_id with
+  | None -> (((node_ref, link_id)::ref2link_id, succ link_id), link_id)
+  | Some i -> (env, i)
+
+let get_str_addr env =
+  second ((^) "L" <. string_of_int) <. get_addr env
+
+let rec dump_arg ((dumped_nodes, addr_env) as env) node_ref =
+  let string_of_addr dumped_nodes =
+    first (pair dumped_nodes)
+    @@ get_str_addr addr_env node_ref
+  in
   if List.memq node_ref dumped_nodes
-     || fst !node_ref <> 1 
-  then pair dumped_atoms @@
-	 match List.nth_opt ref2link_id with
-	 | None -> ref2link_id @ [atom]
-	 | Some i -> "L" ^ string_of_int i
-  else match snd !node_ref with
-       | VMInd node_ref =
-	   
-	   string_of_vm_atom (dumped_nodes, ref2link_id (* the number corresponds to the printed link id *)) node_ref =
-       | VMAtom (p, xs) as atom ->
-     
-    
-			     
-let string_of_atom_list atom_list =
-  atom_list
-			     
+  then string_of_addr dumped_nodes
+  else if fst !node_ref <> 1 then string_of_addr @@ node_ref::dumped_nodes
+  else dump_inline env node_ref
+and dump_inline ((dumped_nodes, addr_env) as env) node_ref =
+  match snd !node_ref with
+  | VMInd node_ref ->
+     first (pair dumped_nodes) @@ get_str_addr addr_env node_ref
+  | VMAtom (p, xs) ->
+     let (env, xs) =
+       List.fold_left_map dump_arg (first (List.cons node_ref) env) xs
+     in
+     (env, p ^ if xs = [] then ""
+	       else "(" ^ String.concat ", " xs ^ ")")
+       
+let dump_atom ((dumped_nodes, addr_env) as env) node_ref =
+  if List.memq node_ref dumped_nodes then (env, None)
+  else
+    second Option.some @@
+      if fst !node_ref = 0 then dump_inline env node_ref
+      else
+	let (addr_env, link) = get_str_addr addr_env node_ref in
+	let env = second (const addr_env) env in
+	second ((^) @@ link ^ " -> ") @@ dump_inline env node_ref
+						  
+let dump_atoms =
+  String.concat ". " <. List.filter_map id <. snd <. List.fold_left_map dump_atom ([], ([], 0)) 
+
 type env = {
     (* A set of the addresses which local links have matched.
      * Containes the addresses to the "embedded atom"s. *)

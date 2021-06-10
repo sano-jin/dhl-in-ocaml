@@ -1,4 +1,4 @@
-(* find_atom.ml *)
+(* findatom.ml *)
 
 open Preprocess
 open Util
