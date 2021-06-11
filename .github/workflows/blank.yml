@@ -38,8 +38,6 @@ jobs:
       
       - run: eval $(opam env)
       
-      - run: ocaml --version
-
       - run: make
 
 
