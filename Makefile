@@ -12,13 +12,13 @@ $(TARGET): 	$(COMPONENT)
 	ocamlmktop $(COMPONENT) -w -31 -o $(TARGET)
 
 parser.mli:	parser.mly
-	ocamlyacc parser.mly
+	opam exec ocamlyacc -- parser.mly
 
 parser.ml:	parser.mly
-	ocamlyacc parser.mly
+	opam exec ocamlyacc -- parser.mly
 
 lexer.ml:	lexer.mll
-	ocamllex lexer.mll
+	opam exec ocamllex -- lexer.mll
 
 backup:
 	/bin/cp -f Makefile $(SRC) back
