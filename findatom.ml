@@ -4,8 +4,8 @@ open Compile
 open Util
 open Vm
        
-let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = function
-  | FreeLink x ->
+let check_arg (local_indegs, free_indegs) env node_ref = function
+  | CFreeLink x ->
        begin
 	 let indeg = List.assoc x free_indegs in
 	 let update_free_addr2indeg fallback =
@@ -23,18 +23,17 @@ let rec check_arg ((local_indegs, free_indegs) as indegs) env node_ref = functio
 	    else (fun s -> {env with free_addr2indeg = s})
 		 <$> update_free_addr2indeg @@ failwith @@ "Bug: not found"
        end
-  | LocalLink (x, _) ->
+  | CLocalLink x ->
      begin
        match List.assoc_opt x env.local2addr with 
        | None -> if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *)
 		 else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match *)
-		 else Some {env with local2addr = (x, node_ref)::env.local2addr; local_addrs = node_ref::env.local_addrs}
+		 else Some {env with local2addr = (x, node_ref)::env.local2addr}
        | Some addr -> if node_ref != addr then None (* local link matched to different addrs *)
 		      else Some env
-     end	 
-  | Atom' (p, xs) ->
-     check_atom indegs env node_ref ((=) 1) (p, xs)
-and check_atom indegs env node_ref indeg_pred (p, xs) =
+     end
+
+let rec check_atom indegs env node_ref indeg_pred (p, xs) =
   if List.memq node_ref env.local_addrs then None (* already matched addr  *)
   (* else if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *) *)
   else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match *)
@@ -49,11 +48,11 @@ and check_atom indegs env node_ref indeg_pred (p, xs) =
 			      {env with local_addrs = node_ref::env.local_addrs} 					
 
 			      
-let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
+let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
   | CLocalInd (x, (p, xs)) ->
      check_atom indegs {env with local2addr = insert x node_ref env.local2addr}
 		node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
-  | FreeInd (x, Atom' (p, xs)) ->
+  | CFreeInd (x, (p, xs)) ->
      begin
        let indeg = List.assoc x free_indegs in
        let env = {env with free2addr = insert x node_ref env.free2addr} in
@@ -68,6 +67,7 @@ let rec check_ind ((local_indegs, free_indegs) as indegs) env node_ref = functio
      end
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
+		       (*
 let find_atom indegs env atom_list =
   let try_deref x link2addr ind =
     match List.assoc_opt x link2addr with
@@ -75,7 +75,33 @@ let find_atom indegs env atom_list =
     | Some node_ref -> check_ind indegs env node_ref ind
   in	 
   function
-  | LocalInd ((x, _), _) as ind -> try_deref x env.local2addr ind 
-  | FreeInd (x, _) as ind -> try_deref x env.free2addr ind 
+  | CLocalInd (x, _) as ind -> try_deref x env.local2addr ind 
+  | CFreeInd (x, _) as ind -> try_deref x env.free2addr ind 
+  | _ -> failwith @@ "Indirection on LHS is not supported"
 
-let find_atoms = flip foldM empty_env <.. flip <. find_atom
+let find_atoms indegs atom_list atoms = foldM (flip (find_atom indegs) atom_list) empty_env atoms 
+			*)
+
+let rec find_atoms indegs atom_list env = 
+  let try_deref x link2addr ind t =
+    begin
+      match List.assoc_opt x link2addr with
+      | None ->
+	 let find_others node_ref =
+	   check_ind indegs env node_ref ind
+	 in
+	 one_of find_others atom_list
+      | Some node_ref -> check_ind indegs env node_ref ind
+    end >>= flip (find_atoms indegs atom_list) t
+  in	 
+  function
+  | CLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
+  | CFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
+  | [] -> Some env
+  | _ -> failwith @@ "Indirection on LHS is not supported"
+
+let find_atoms indegs atom_list atoms = find_atoms indegs atom_list empty_env atoms
+  
+		       (*
+let find_atoms indegs atom_list atoms = foldM (find_atom indegs atom_list) empty_env atoms 
+			*)
