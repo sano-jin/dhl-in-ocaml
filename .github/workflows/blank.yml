@@ -32,6 +32,8 @@ jobs:
 
       - run: opam install . --deps-only --with-test
 
+      - run: export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:${PATH}"
+      
       - run: make
 
 
