@@ -35,7 +35,6 @@ let check_arg (local_indegs, free_indegs) env node_ref = function
 
 let rec check_atom indegs env node_ref indeg_pred (p, xs) =
   if List.memq node_ref env.local_addrs then None (* already matched addr  *)
-  (* else if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *) *)
   else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match *)
   else match snd !node_ref with
        | VMInd next ->
@@ -67,32 +66,12 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
      end
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
-		       (*
-let find_atom indegs env atom_list =
-  let try_deref x link2addr ind =
+let rec find_atoms indegs atom_list env = 
+  let try_deref x link2addr ind t = (
     match List.assoc_opt x link2addr with
     | None -> one_of (flip (check_ind indegs env) ind) atom_list
     | Some node_ref -> check_ind indegs env node_ref ind
-  in	 
-  function
-  | CLocalInd (x, _) as ind -> try_deref x env.local2addr ind 
-  | CFreeInd (x, _) as ind -> try_deref x env.free2addr ind 
-  | _ -> failwith @@ "Indirection on LHS is not supported"
-
-let find_atoms indegs atom_list atoms = foldM (flip (find_atom indegs) atom_list) empty_env atoms 
-			*)
-
-let rec find_atoms indegs atom_list env = 
-  let try_deref x link2addr ind t =
-    begin
-      match List.assoc_opt x link2addr with
-      | None ->
-	 let find_others node_ref =
-	   check_ind indegs env node_ref ind
-	 in
-	 one_of find_others atom_list
-      | Some node_ref -> check_ind indegs env node_ref ind
-    end >>= flip (find_atoms indegs atom_list) t
+  ) >>= flip (find_atoms indegs atom_list) t
   in	 
   function
   | CLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
@@ -100,8 +79,4 @@ let rec find_atoms indegs atom_list env =
   | [] -> Some env
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
-let find_atoms indegs atom_list atoms = find_atoms indegs atom_list empty_env atoms
-  
-		       (*
-let find_atoms indegs atom_list atoms = foldM (find_atom indegs atom_list) empty_env atoms 
-			*)
+let find_atoms = flip flip empty_env <. find_atoms 
