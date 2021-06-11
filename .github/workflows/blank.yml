@@ -13,9 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
+#          - macos-latest
           - ubuntu-latest
-          - windows-latest
+#          - windows-latest
         ocaml-compiler:
           - 4.12.x
 
@@ -32,6 +32,9 @@ jobs:
 
       - run: opam install . --deps-only --with-test
 
-      - run: opam exec -- dune build
+      - run: make
 
-      - run: opam exec -- dune runtest
+
+#      - run: opam exec -- dune build
+
+#      - run: opam exec -- dune runtest
