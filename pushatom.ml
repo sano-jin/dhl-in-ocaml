@@ -46,12 +46,14 @@ let push_atom (local_indegs, free_indegs) link2addrs =
      ((local2addr, free2addr), node_ref)
      
 
-let push_atoms (local_indegs, free_indegs) free_addr2indeg free2addrs inds =
+let push_atoms (local_indegs, free_indegs) free_incidences free_addr2indeg free2addrs inds =
   let free_indegs =
     flip List.map free_indegs
     @@ fun (x, indeg) ->
        (x, List.assoc (List.assoc x free2addrs) free_addr2indeg + indeg)
   in
-  List.map snd @@ fst @@ fst @@ List.fold_left_map (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds
+  let (local2addr, free2addr) =
+    fst @@ List.fold_left_map (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds in
+  List.map snd local2addr @ List.map snd @@ List.filter (flip List.mem free_incidences <. fst) free2addr
 
 				     

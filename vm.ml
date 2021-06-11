@@ -51,15 +51,20 @@ let dump_atom ((dumped_nodes, addr_env) as env) node_ref =
 let dump_atoms =
   String.concat ". " <. List.filter_map id <. snd <. List.fold_left_map dump_atom ([], ([], 0)) 
 
+let dbg_addr = ref (-1)
+									
 let rec dbg_dump_ref addr2link node_ref =
   (^) "#" @@ string_of_int @@
     match List.assq_opt node_ref addr2link with
     | None ->
+       let x = !dbg_addr in
        print_string (
-	 "segfault... " ^
-	   let (indeg, atom) = !node_ref in
-	   "??? -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n"
-	 ); -1
+	   "segfault... " ^
+	     let (indeg, atom) = !node_ref in
+	     string_of_int x ^ " -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n"
+	 );
+       dbg_addr := pred x;
+       x
     | Some s -> s
 and dbg_dump_atom addr2link =
   function  

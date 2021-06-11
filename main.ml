@@ -52,8 +52,11 @@ let test_atom_list_nil =
 let dump =
   Vm.dump_atoms test_atom_list
 
+		
 let reduce_file file_name i atom_list =
   let rule = flip List.nth i @@ snd @@ prep_file file_name in
+  (* Vm.dump_atoms <$> *)
   Eval.reduce atom_list rule 
 
+				
 		      
