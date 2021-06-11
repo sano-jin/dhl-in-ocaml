@@ -19,8 +19,8 @@ let prep_file =
   partit <. parse <. read_file
 
 let test file_name i atom_list =
-  let CRule ((((indegs, _), atoms), _), _) = flip List.nth i @@ snd @@ prep_file file_name in
-  Findatom.find_atoms indegs atom_list atoms 
+  let CRule (((indegs, _), atoms), _, _) = flip List.nth i @@ snd @@ prep_file file_name in
+  Findatom.find_atoms () indegs atom_list atoms 
 
 let test_atom_list =
   Vm.test_atom2atom_list @@

@@ -14,7 +14,7 @@ let check_arg (local_indegs, free_indegs) env node_ref = function
 	 match List.assoc_opt x env.free2addr with 
 	 | None -> (* if the free link name has not mathced to any address *)
 	    if List.memq node_ref env.local_addrs then None (* Already matched with a local link *)
-	    else 
+	    else
 	      (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
 	      <$> update_free_addr2indeg @@
 		    (flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
@@ -52,31 +52,35 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
      check_atom indegs {env with local2addr = insert x node_ref env.local2addr}
 		node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
   | CFreeInd (x, (p, xs)) ->
-     begin
-       let indeg = List.assoc x free_indegs in
-       let env = {env with free2addr = insert x node_ref env.free2addr} in
-       update_assc_opt
-	 (* has not mathced with the other free link *)
-	 (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
-	 ((==) node_ref)
-	 (flip safe_minus indeg) env.free_addr2indeg
-       >>= fun free_addr2indeg -> 
-       check_atom indegs {env with free_addr2indeg = free_addr2indeg}
-		  node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
-     end
+     let indeg = List.assoc x free_indegs in
+     let env = {env with free2addr = insert x node_ref env.free2addr} in
+     update_assc_opt
+       (* has not mathced with the other free link *)
+       (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
+       ((==) node_ref)
+       (flip safe_minus indeg) env.free_addr2indeg
+     >>= fun free_addr2indeg -> 
+     check_atom indegs {env with free_addr2indeg = free_addr2indeg}
+		node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
-let rec find_atoms indegs atom_list env = 
+
+let rec find_atoms redirs indegs atom_list env =
+  let check_ind_ = flip @@ check_ind indegs env in
   let try_deref x link2addr ind t = (
     match List.assoc_opt x link2addr with
-    | None -> one_of (flip (check_ind indegs env) ind) atom_list
-    | Some node_ref -> check_ind indegs env node_ref ind
-  ) >>= flip (find_atoms indegs atom_list) t
+    | None -> one_of (check_ind_ ind) atom_list
+    | Some node_ref -> check_ind_ ind node_ref
+  ) >>= flip (find_atoms redirs indegs atom_list) t
   in	 
   function
   | CLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
   | CFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
-  | [] -> Some env
+  | [] ->
+     if redirs = () then Some env else None
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
-let find_atoms = flip flip empty_env <. find_atoms 
+let find_atoms = flip flip empty_env <.. find_atoms
+
+
+

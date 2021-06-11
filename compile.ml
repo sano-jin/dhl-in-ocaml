@@ -15,8 +15,8 @@ type c_ind =
   | CRedir of string * string
 
 type c_inds = c_ind list
-type c_rule = CRule of (((link_info * c_inds) * c_rule list) * ((link_info * c_inds) * c_rule list))
-			 
+type c_rule = CRule of (link_info * c_inds) * ((link_info * c_inds) * c_rule list) * (string * string) list
+ 
 let rec partit_arg ((link_id, local_indegs) as env) = function
   | PFreeLink x  -> (env, (CFreeLink x, []))
   | PLocalLink (x, _) -> (env, (CLocalLink x, []))
@@ -56,7 +56,13 @@ let check_rule (((lhs_links, _), lhs_rules), ((rhs_links, _), rhs_rules)) =
   if lhs_rules <> [] then failwith @@ "rule(s) on LHS"
   else if rhs_rules <> [] then failwith @@ "rule(s) on RHS is not supported ..."
   else check_link_cond (lhs_links, rhs_links)
-								    
+
+let collect_redir = function
+  | CRedir (x, y) -> Some (x, y)
+  | _ -> None
+
+let collect_redirs = List.filter_map collect_redir
+	   
 let rec partit proc =
   let link_id, (atoms, rules) = second partitionEithers @@ prep_atoms [] 0 proc in
   let ((local_indegs, _), _) as link_info = collect_link_info atoms in
@@ -66,5 +72,7 @@ let rec partit proc =
 and partit_rule (lhs, rhs) =
   let rule = (partit lhs, partit rhs) in
   check_rule rule;
-  CRule rule
+  let (lhs, (((_, r_graph), _) as rhs)) = first fst rule in
+  let redirs = List.filter_map collect_redir r_graph in
+  CRule (lhs, rhs, redirs)
 
