@@ -34,7 +34,9 @@ jobs:
 
       - run: export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:${PATH}"
       
-      - run: opam init
+      - run: opam init -y
+      
+      - run: eval $(opam env)
       
       - run: make
 
