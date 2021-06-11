@@ -1,4 +1,4 @@
-(* main.ml *)
+(* test.ml *)
 
 open Syntax
 open Util
@@ -31,7 +31,7 @@ let test_atom_list =
 					   Vm.TAtom ("nil", [])
 					 ]);
 			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("b", []);
+					   Vm.TAtom ("cons", []);
 					   Vm.TAtom ("nil", [])
 					 ])
 			    ])
@@ -43,7 +43,7 @@ let test_atom_list_nil =
 		 Vm.TAtom ("append", [
 			      Vm.TAtom ("nil", []);
 			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("a", []);
+					   Vm.TAtom ("cons", []);
 					   Vm.TAtom ("nil", [])
 					 ])
 			    ])
@@ -51,9 +51,3 @@ let test_atom_list_nil =
 	     
 let dump =
   Vm.dump_atoms test_atom_list
-
-let reduce_file file_name i atom_list =
-  let rule = flip List.nth i @@ snd @@ prep_file file_name in
-  Eval.reduce atom_list rule 
-
-		      

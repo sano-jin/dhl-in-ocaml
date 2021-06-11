@@ -69,6 +69,7 @@ let rec collect_indeg_arg ((locals, frees) as links) = function
      List.fold_left collect_indeg_arg links xs
 
 let collect_indeg links = function
+  | PFreeInd  (_, PFreeLink x) -> second (update (fun _ -> [x, 0]) id x) links
   | PLocalInd (_, p) -> collect_indeg_arg links p
   | PFreeInd  (_, p) -> collect_indeg_arg links p     
 

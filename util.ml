@@ -2,18 +2,23 @@
 
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
+let (<...) f g = fun x y z -> f (g x y z)
 let (>>=) = Option.bind
 let (<$>) = Option.map
 let (<::>) h t = List.cons h <$> t
 let flip f x y = f y x  
+let (<&>) x f = Option.map f x
 let rec foldM f acc = function
   | [] -> Some acc
   | h::t -> f acc h >>= flip (foldM f) t
-     
+			     
 let second f (a, b) = (a, f b)
 let first f (a, b) = (f a, b)
 let swap (a, b) = (b, a)
+let rot_left (a, (b, c)) = ((a, b), c)
+let rot_right ((a, b), c) = (a, (b, c))
 let set_minus l r = List.filter (not <. flip List.mem r) l
+let set_minus_q l r = List.filter (not <. flip List.memq r) l
 let id x = x
 let partitionEithers l = List.partition_map id l (* monomorphism restriction *)
 let curry f x y = f (x, y)
@@ -43,7 +48,7 @@ let const x y = x
 let (<|>) l f = 
   if Option.is_some l then l
   else f ()
-		  
+
 let rec one_of f = function
   | [] -> None
   | h::t -> f h <|> fun _ -> one_of f t
@@ -66,8 +71,16 @@ let safe_minus x y =
   if x < y then None else Some (x - y)
 
 
+let maybe default = function
+  | None -> default
+  | Some s -> s
 		    
-		    
+
+let (<~>) h t =
+  maybe t @@ (flip List.cons t <$> h)
+		  
+				    
+
 (* let list_singleton x = [x] *)
 		  
 (* 
