@@ -19,13 +19,13 @@ let get_str_addr env =
   second ((^) "L" <. string_of_int) <. get_addr env
 
 let rec dump_arg ((dumped_nodes, addr_env) as env) node_ref =
-  let string_of_addr dumped_nodes =
+  let string_of_addr _ =
     first (pair dumped_nodes)
     @@ get_str_addr addr_env node_ref
   in
   if List.memq node_ref dumped_nodes
-  then string_of_addr dumped_nodes
-  else if fst !node_ref <> 1 then string_of_addr @@ node_ref::dumped_nodes
+  then string_of_addr ()
+  else if fst !node_ref <> 1 then string_of_addr ()
   else dump_inline env node_ref
 and dump_inline ((dumped_nodes, addr_env) as env) node_ref =
   match snd !node_ref with
@@ -51,6 +51,31 @@ let dump_atom ((dumped_nodes, addr_env) as env) node_ref =
 let dump_atoms =
   String.concat ". " <. List.filter_map id <. snd <. List.fold_left_map dump_atom ([], ([], 0)) 
 
+let rec dbg_dump_ref addr2link node_ref =
+  (^) "#" @@ string_of_int @@
+    match List.assq_opt node_ref addr2link with
+    | None ->
+       print_string (
+	 "segfault... " ^
+	   let (indeg, atom) = !node_ref in
+	   "??? -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n"
+	 ); -1
+    | Some s -> s
+and dbg_dump_atom addr2link =
+  function  
+  | VMAtom (p, xs) -> p ^ " (" ^ String.concat ", " (List.map (dbg_dump_ref addr2link) xs) ^ ")"
+  | VMInd x -> dbg_dump_ref addr2link x
+
+let dbg_dump_node_ref addr2link (x, node_ref) =
+  let (indeg, atom) = !node_ref in
+  "#" ^ string_of_int x ^ " -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom
+										    
+let dbg_dump_atom_list atom_list =
+  let addr2link = List.mapi (flip pair) atom_list in
+  let link2node_ref = List.mapi pair atom_list in
+  print_string @@ String.concat "\n" @@ List.map (dbg_dump_node_ref addr2link) link2node_ref @ ["\n"]
+			    
+    
 type env = {
     (* A set of the addresses which local links have matched.
      * Containes the addresses to the "embedded atom"s. *)

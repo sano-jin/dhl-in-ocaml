@@ -2,6 +2,7 @@
 
 open Syntax
 open Util
+open Compile
 
 (* parse : string -> stmt *)
 let parse str = 
@@ -14,12 +15,12 @@ let show str =
 let test_syntax =
   string_of_proc 0 <. parse <. read_file
 
-let prep =
-  Preprocess.prep <. parse <. read_file
+let prep_file =
+  partit <. parse <. read_file
 
-let test file_name i atom_list =
-  let Preprocess.Rule' (((atoms, (indegs, _)), _), _) = flip List.nth i @@ snd @@ prep file_name in
-  Findatom.find_atoms indegs atom_list atoms 
+let test_file file_name i atom_list =
+  let CRule (((indegs, _), atoms), _, _) = flip List.nth i @@ snd @@ prep_file file_name in
+  Findatom.find_atoms () indegs atom_list atoms 
 
 let test_atom_list =
   Vm.test_atom2atom_list @@
@@ -30,7 +31,7 @@ let test_atom_list =
 					   Vm.TAtom ("nil", [])
 					 ]);
 			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("cons", []);
+					   Vm.TAtom ("b", []);
 					   Vm.TAtom ("nil", [])
 					 ])
 			    ])
@@ -42,7 +43,7 @@ let test_atom_list_nil =
 		 Vm.TAtom ("append", [
 			      Vm.TAtom ("nil", []);
 			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("cons", []);
+					   Vm.TAtom ("a", []);
 					   Vm.TAtom ("nil", [])
 					 ])
 			    ])
@@ -50,3 +51,9 @@ let test_atom_list_nil =
 	     
 let dump =
   Vm.dump_atoms test_atom_list
+
+let reduce_file file_name i atom_list =
+  let rule = flip List.nth i @@ snd @@ prep_file file_name in
+  Eval.reduce atom_list rule 
+
+		      
