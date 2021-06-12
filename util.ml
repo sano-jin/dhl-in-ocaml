@@ -67,6 +67,8 @@ let rec update_assc_opt fallback pred f = function
      if pred y then flip List.cons t <. pair y <$> f v
      else h <::> update_assc_opt fallback pred f t
 
+let update_ref f r = r := f !r
+
 let safe_minus x y =
   if x < y then None else Some (x - y)
 

@@ -16,8 +16,9 @@ let remove_atom node_ref =
 let reduce atom_list (CRule (((lhs_indegs, _), lhs_atoms), (((rhs_indegs, free_incidences), rhs_atoms), _), _)) =
   Findatom.find_atoms () lhs_indegs atom_list lhs_atoms
   <&> fun env ->
-      let atom_list = set_minus_q atom_list env.local_addrs in
-      List.iter remove_atom env.local_addrs;
+      let local_addrs = List.map snd env.local2addr in
+      let atom_list = set_minus_q atom_list local_addrs in
+      List.iter remove_atom local_addrs;
       dbg_dump_atom_list atom_list;
       let pushed_atoms =
 	Pushatom.push_atoms rhs_indegs free_incidences env.free_addr2indeg env.free2addr rhs_atoms in

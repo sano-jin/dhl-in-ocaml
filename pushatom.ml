@@ -24,7 +24,6 @@ let push_atom (local_indegs, free_indegs) link2addrs =
     match List.assoc_opt x link2addr with
     | None ->
        let node_ref = ref atom in
-       print_string @@ "..." ^ (dbg_dump_atom [] @@ snd !node_ref) ^ "...";
        ((x, node_ref)::link2addr, node_ref)
     | Some node_ref ->
        node_ref := atom;
@@ -35,16 +34,17 @@ let push_atom (local_indegs, free_indegs) link2addrs =
   | CFreeInd (x, (p, xs)) ->
      let ((local2addr, free2addr), xs) = get_links xs in
      let (free2addr, node_ref) = get_atom (x, VMAtom (p, xs)) free_indegs free2addr in
-     ((local2addr, free2addr), node_ref)
+     (local2addr, free2addr)
   | CLocalInd (x, (p, xs)) ->
      let ((local2addr, free2addr), xs) = get_links xs in
      let (local2addr, node_ref) = get_atom (x, VMAtom (p, xs)) local_indegs local2addr in
-     ((local2addr, free2addr), node_ref)
+     (local2addr, free2addr)
   | CRedir (x, y) ->
-     let ((local2addr, free2addr), y) = push_arg link2addrs @@ CFreeLink y in
-     let (free2addr, node_ref) = get_atom (x, VMInd y) free_indegs free2addr in
-     ((local2addr, free2addr), node_ref)
-     
+     if List.assoc x free_indegs = 0 then link2addrs
+     else	  
+       let ((local2addr, free2addr), y) = push_arg link2addrs @@ CFreeLink y in
+       let (free2addr, node_ref) = get_atom (x, VMInd y) free_indegs free2addr in
+       (local2addr, free2addr)
 
 let push_atoms (local_indegs, free_indegs) free_incidences free_addr2indeg free2addrs inds =
   let free_indegs =
@@ -53,7 +53,7 @@ let push_atoms (local_indegs, free_indegs) free_incidences free_addr2indeg free2
        (x, List.assoc (List.assoc x free2addrs) free_addr2indeg + indeg)
   in
   let (local2addr, free2addr) =
-    fst @@ List.fold_left_map (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds in
-  List.map snd local2addr @ List.map snd @@ List.filter (flip List.mem free_incidences <. fst) free2addr
+    List.fold_left (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds in
+  List.map snd local2addr 
 
 				     

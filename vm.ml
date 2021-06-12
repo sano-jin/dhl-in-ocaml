@@ -8,29 +8,29 @@ type vm_atom =
   | VMInd of node_ref
  and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
 
-let null_ptr: node_ref = ref (0, VMAtom ("Null", []))
-
-let get_addr ((ref2link_id, link_id) as env) node_ref =
-  match List.assq_opt node_ref ref2link_id with
-  | None -> (((node_ref, link_id)::ref2link_id, succ link_id), link_id)
-  | Some i -> (env, i)
-
-let get_str_addr env =
-  second ((^) "L" <. string_of_int) <. get_addr env
+let get_link ((ref2link_id, link_id) as env) node_ref =
+  second ((^) "L" <. string_of_int) @@
+    match List.assq_opt node_ref ref2link_id with
+    | None -> (((node_ref, link_id)::ref2link_id, succ link_id), link_id)
+    | Some i ->
+       
+       (env, i)
 
 let rec dump_arg ((dumped_nodes, addr_env) as env) node_ref =
-  let string_of_addr _ =
+  let string_of_addr = fun _ ->
     first (pair dumped_nodes)
-    @@ get_str_addr addr_env node_ref
+    @@ get_link addr_env node_ref
   in
   if List.memq node_ref dumped_nodes
   then string_of_addr ()
   else if fst !node_ref <> 1 then string_of_addr ()
-  else dump_inline env node_ref
-and dump_inline ((dumped_nodes, addr_env) as env) node_ref =
+  else dump_inline false env node_ref 
+and dump_inline is_top_level ((dumped_nodes, addr_env) as env) node_ref =
   match snd !node_ref with
-  | VMInd node_ref ->
-     first (pair dumped_nodes) @@ get_str_addr addr_env node_ref
+  | VMInd y ->
+     if is_top_level then 
+       first (pair @@ node_ref::dumped_nodes) @@ get_link addr_env y
+     else first (pair dumped_nodes) @@ get_link addr_env node_ref
   | VMAtom (p, xs) ->
      let (env, xs) =
        List.fold_left_map dump_arg (first (List.cons node_ref) env) xs
@@ -42,11 +42,11 @@ let dump_atom ((dumped_nodes, addr_env) as env) node_ref =
   if List.memq node_ref dumped_nodes then (env, None)
   else
     second Option.some @@
-      if fst !node_ref = 0 then dump_inline env node_ref
+      if fst !node_ref = 0 then dump_inline true env node_ref
       else
-	let (addr_env, link) = get_str_addr addr_env node_ref in
+	let (addr_env, link) = get_link addr_env node_ref in
 	let env = second (const addr_env) env in
-	second ((^) @@ link ^ " -> ") @@ dump_inline env node_ref
+	second ((^) @@ link ^ " -> ") @@ dump_inline true env node_ref 
 						  
 let dump_atoms =
   String.concat ". " <. List.filter_map id <. snd <. List.fold_left_map dump_atom ([], ([], 0)) 
@@ -58,16 +58,13 @@ let rec dbg_dump_ref addr2link node_ref =
     match List.assq_opt node_ref addr2link with
     | None ->
        let x = !dbg_addr in
-       print_string (
-	   "segfault... " ^
-	     let (indeg, atom) = !node_ref in
-	     string_of_int x ^ " -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n"
-	 );
-       dbg_addr := pred x;
+       let (indeg, atom) = !node_ref in
+       print_string ("segfault... " ^ string_of_int x
+		     ^ " -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n");
+       update_ref pred dbg_addr;
        x
     | Some s -> s
-and dbg_dump_atom addr2link =
-  function  
+and dbg_dump_atom addr2link = function  
   | VMAtom (p, xs) -> p ^ " (" ^ String.concat ", " (List.map (dbg_dump_ref addr2link) xs) ^ ")"
   | VMInd x -> dbg_dump_ref addr2link x
 
@@ -106,8 +103,6 @@ let empty_env =
 				       
 type test_atom =
   | TAtom of string * test_atom list
-
-let update_ref f r = r := f !r
 
 let test_atom2atom_list =
   let rec helper acc = function
