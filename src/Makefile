@@ -25,7 +25,7 @@ backup:
 	/bin/cp -f Makefile $(SRC) back
 
 clean:
-	/bin/rm -f parser.ml parser.mli lexer.ml $(TARGET) *.cmi *.cmo *.mli
+	/bin/rm -f parser.ml parser.mli lexer.ml $(TARGET) *.cmi *.cmo *.mli *.cmx *.o
 
 count:
 	$(SCRIPT_DIR)/count_lines.sh '$(SRC)'

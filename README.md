@@ -11,10 +11,12 @@ A minimal interpreter of a language based on graph rewriting in OCaml.
 git clone https://github.com/sano-jin/dhl-in-ocaml
 cd src
 make
+cd ..
 ```
 
 ## Usage
+
 ```bash
-./dhl
+src/dhl "test/append.dhl"
 ```
 
