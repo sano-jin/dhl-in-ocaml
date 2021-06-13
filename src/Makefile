@@ -10,7 +10,7 @@ TARGET= dhl
 all:	$(TARGET)
 
 $(TARGET): 	$(COMPONENT) 
-	opam exec ocamlmktop -- $(COMPONENT) -w -31 -o $(TARGET)
+	opam exec ocamlopt -- $(COMPONENT) -w -31 -o $(TARGET)
 
 parser.mli:	parser.mly
 	opam exec ocamlyacc -- parser.mly

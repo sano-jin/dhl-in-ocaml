@@ -39,8 +39,11 @@ let dump_ind ((dumped_nodes, addr_env) as env) node_ref =
 	second ((^) @@ link ^ " -> ") @@ dump_atom true env node_ref 
 						  
 let dump =
-  String.concat ". " <. List.filter_map id <. snd <. List.fold_left_map dump_ind ([], ([], 0)) 
-						      
+  String.concat ". "
+  <. List.filter_map id <. snd <. List.fold_left_map dump_ind ([], ([], 0)) 
+  <. List.stable_sort (fun r1 r2 -> fst !r1 - fst !r2)
+
+		      
 type env = {
   (* all the addresses of the matched atoms on lhs. possibly not indirected from a local link. *)
   local_addrs: node_ref list;

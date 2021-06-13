@@ -15,4 +15,10 @@ let reduce atom_list (CRule (((lhs_indegs, _), lhs_atoms), (((rhs_indegs, _), rh
       let local_addrs = List.map snd env.local2addr in
       let atom_list = set_minus_q atom_list local_addrs in
       List.iter remove_atom local_addrs;
-      Pushatom.push_atoms rhs_indegs env.free_addr2indeg env.free2addr rhs_atoms @ atom_list  
+      Pushatom.push_atoms rhs_indegs env.free_addr2indeg env.free2addr rhs_atoms @ atom_list
+
+let run_once = one_of <. reduce
+
+let init_atoms local_indegs inds =
+  Pushatom.push_atoms (local_indegs, []) [] [] inds
+		      

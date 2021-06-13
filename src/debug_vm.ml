@@ -27,7 +27,7 @@ let dbg_dump_ind addr2link (x, node_ref) =
 let dbg_dump atom_list =
   let addr2link = List.mapi (flip pair) atom_list in
   let link2node_ref = List.mapi pair atom_list in
-  print_string @@ String.concat "\n" @@ List.map (dbg_dump_ind addr2link) link2node_ref @ ["\n"]
+  String.concat "\n" @@ List.map (dbg_dump_ind addr2link) link2node_ref @ ["\n"]
 			    
 type test_atom =
   | TAtom of string * test_atom list
@@ -40,3 +40,33 @@ let test_atom2atom_list =
        (node_ref::acc, node_ref)
   in
   fst <. second @@ update_ref @@ first @@ const 0 <. helper []
+
+
+let test_atom_list =
+  test_atom2atom_list @@
+    TAtom ("test", [
+	      TAtom ("append", [
+			TAtom ("cons", [
+				  TAtom ("a", []);
+				  TAtom ("nil", [])
+				]);
+			TAtom ("cons", [
+				  TAtom ("b", []);
+				  TAtom ("nil", [])
+				])
+		      ])
+	    ])
+
+let test_atom_list_nil =
+  test_atom2atom_list @@
+    TAtom ("test", [
+	      TAtom ("append", [
+			TAtom ("nil", []);
+			TAtom ("cons", [
+				  TAtom ("a", []);
+				  TAtom ("nil", [])
+				])
+		      ])
+	    ])
+
+							    

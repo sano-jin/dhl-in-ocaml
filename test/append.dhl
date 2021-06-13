@@ -25,10 +25,3 @@ R -> append(cons(H, T), L)
 % append_nil @@
 R -> append(nil, L)
 :- R -> L.
-
-
-\A.(
- A -> hoge(A, B, A)
-% A -> fuga
-).
-
