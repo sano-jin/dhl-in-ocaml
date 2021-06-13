@@ -65,14 +65,14 @@ let rec collect_indeg_arg ((locals, frees) as links) = function
      (update (fun _ -> failwith @@ link_name ^ " is not serial") succ x locals, frees)
   | PFreeLink x -> 
      (locals, update (fun _ -> [x, 1]) succ x frees)
-  | PAtom (p, xs) ->
+  | PAtom (_, xs) ->
      List.fold_left collect_indeg_arg links xs
 
 let collect_indeg links = function
   | PFreeInd  (_, PFreeLink x) -> second (update (fun _ -> [x, 0]) id x) links
   | PLocalInd (_, p) -> collect_indeg_arg links p
   | PFreeInd  (_, p) -> collect_indeg_arg links p     
-
+					  
 let collect_indegs = List.fold_left collect_indeg
 
 let collect_link_info atoms =

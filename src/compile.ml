@@ -17,7 +17,7 @@ type c_ind =
 type c_inds = c_ind list
 type c_rule = CRule of (link_info * c_inds) * ((link_info * c_inds) * c_rule list) * (string * string) list
  
-let rec partit_arg ((link_id, local_indegs) as env) = function
+let rec partit_arg env = function
   | PFreeLink x  -> (env, (CFreeLink x, []))
   | PLocalLink (x, _) -> (env, (CLocalLink x, []))
   | PAtom (p, xs) ->
@@ -27,7 +27,7 @@ let rec partit_arg ((link_id, local_indegs) as env) = function
 and partit_args env =
   second (second List.concat <. List.split) <. List.fold_left_map partit_arg env
 
-let rec partit_ind env = function
+let partit_ind env = function
   | PLocalInd ((x, _), PAtom (p, xs)) ->
      let (env, (links, inds)) = partit_args env xs in
      (env, CLocalInd (x, (p, links))::inds)
@@ -47,9 +47,9 @@ let check_link_cond ((lhs_indegs, lhs_free_incidences),
   if unbound_rhs_links <> [] then
     failwith @@ "link(s) " ^ String.concat ", " unbound_rhs_links ^ " on RHS has/have not appeared on LHS"
   else ();
-  let unredired = set_minus lhs_free_incidences rhs_free_incidences in
-  if unredired <> [] then 
-    failwith @@ "link(s) " ^ String.concat ", " unredired ^ " on LHS is/are not redirected on RHS"
+  let non_linear_incidences = sym_diff lhs_free_incidences rhs_free_incidences in
+  if non_linear_incidences <> [] then 
+    failwith @@ "link(s) " ^ String.concat ", " non_linear_incidences ^ " appear(s) non lineary on rule"
   else ()
 
 let check_rule (((lhs_links, _), lhs_rules), ((rhs_links, _), rhs_rules)) =

@@ -1,23 +1,7 @@
-(* syntax.ml *)
+(* debug_syntax.ml *)
 
-let value default = function
-  | None -> default
-  | Some s -> s		      
-		      
-(* argument of an atom *)
-type arg =
-  | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
-  | Link of string             (* link. e.g. X *)
+open Syntax
 
-(* process *)
-type proc = 
-  | Zero
-  | Ind of string option * arg  (* indirection. e.g. X -> a(Y) *)
-  | Mol of proc * proc          (* molecule. e.g. (P, Q) *)  
-  | New of string * proc        (* link creation. e.g. \X.P *)
-  | Rule of proc * proc         (* rule. e.g. P :- Q. *)
-
-		     
 let rec string_of_arg = function
   | Link x -> x
   | Atom (a, xs) ->
@@ -33,7 +17,7 @@ let rec string_of_proc priority = function
      in str_of_from ^ string_of_arg _to
   | Rule (lhs, rhs) ->
      let str_of_rule =
-       string_of_proc 1 lhs ^ " :- " ^ string_of_proc 1 lhs
+       string_of_proc 1 lhs ^ " :- " ^ string_of_proc 1 rhs
      in
      if priority > 1 then "(" ^ str_of_rule ^ ")"
      else str_of_rule

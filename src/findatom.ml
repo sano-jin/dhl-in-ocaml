@@ -24,46 +24,45 @@ let check_arg (local_indegs, free_indegs) env node_ref = function
 		 <$> update_free_addr2indeg @@ failwith @@ "Bug: not found"
        end
   | CLocalLink x ->
-     begin
-       match List.assoc_opt x env.local2addr with 
-       | None -> if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *)
-		 else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match *)
-		 else Some {env with local2addr = (x, node_ref)::env.local2addr}
-       | Some addr -> if node_ref != addr then None (* local link matched to different addrs *)
-		      else Some env
-     end
-
-let rec check_atom indegs env node_ref indeg_pred (p, xs) =
-  if List.memq node_ref env.local_addrs then None (* already matched addr  *)
-  else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match *)
-  else match snd !node_ref with
-       | VMInd next ->
-	  node_ref := !next; (* path compression *)
-	  check_atom indegs env node_ref indeg_pred (p, xs)
-       | VMAtom (q, ys) ->
-	  if p <> q then None (* different atom name *)
-	  else zip ys xs
-	       >>= fold_maybe (uncurry <. check_arg indegs)
-			      {env with local_addrs = node_ref::env.local_addrs} 					
-
+     match List.assoc_opt x env.local2addr with 
+     | None -> if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *)
+	       else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match *)
+	       else Some {env with local2addr = (x, node_ref)::env.local2addr}
+     | Some addr -> if node_ref != addr then None (* local link matched to different addrs *)
+		    else Some env
+			      
+let check_atom indegs indeg_pred (p, xs) env node_ref =
+  let rec traverse node_ref =
+    if List.memq node_ref env.local_addrs then None (* already matched addr  *)
+    else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match *)
+    else match snd !node_ref with
+	 | VMInd next ->
+	    (* node_ref := !next; (* path compression *) *) (* not working. must perform fusion *)
+	    traverse next
+	 | VMAtom (q, ys) ->
+	    if p <> q then None (* different atom name *)
+	    else zip ys xs
+		 >>= foldM (uncurry <. check_arg indegs)
+			   {env with local_addrs = node_ref::env.local_addrs}
+  in traverse node_ref
 			      
 let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
   | CLocalInd (x, (p, xs)) ->
-     check_atom indegs {env with local2addr = insert x node_ref env.local2addr}
-		node_ref ((=) @@ List.assoc x local_indegs) (p, xs) 
+     check_atom indegs  ((=) @@ List.assoc x local_indegs) (p, xs)
+		{env with local2addr = insert x node_ref env.local2addr} node_ref
   | CFreeInd (x, (p, xs)) ->
      let indeg = List.assoc x free_indegs in
      let env = {env with free2addr = insert x node_ref env.free2addr} in
      update_assc_opt
-       (* has not mathced with the other free link *)
+       (* if has not mathced with the other free link *)
        (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
        ((==) node_ref)
        (flip safe_minus indeg) env.free_addr2indeg
      >>= fun free_addr2indeg -> 
-     check_atom indegs {env with free_addr2indeg = free_addr2indeg}
-		node_ref ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
+     check_atom indegs ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
+		{env with free_addr2indeg = free_addr2indeg} node_ref 
   | _ -> failwith @@ "Indirection on LHS is not supported"
-
+ 
 
 let rec find_atoms redirs indegs atom_list env =
   let check_ind_ = flip @@ check_ind indegs env in
@@ -81,6 +80,3 @@ let rec find_atoms redirs indegs atom_list env =
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 let find_atoms = flip flip empty_env <.. find_atoms
-
-
-
