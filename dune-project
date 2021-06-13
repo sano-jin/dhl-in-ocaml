@@ -14,6 +14,6 @@
  (description "A minimal interpreter of a language based on graph rewriting in OCaml")
  (depends
   (ounit :with-test)
-  (minher (> 20210419))
+  (menhir (>= 20210419))
   (dune (> 1.5))))
 (using menhir 2.1)
