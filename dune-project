@@ -3,15 +3,15 @@
 (version 0.0.0)
 (generate_opam_files true)
 
-(source (github username/myproject))
+(source (github sano-jin/dhl-in-ocaml))
 (license MIT)
-(authors "author<email@email.com>" "author2<email2@email.com>")
-(maintainers "author<email@email.com>")
+(authors "sano<sano@ueda.info.waseda.ac.jp>")
+(maintainers "sano<sano@ueda.info.waseda.ac.jp>")
 
 (package
  (name dhl)
- (synopsis "Short description")
- (description "Long description")
+ (synopsis "Directed HyperLMNtal interpreter")
+ (description "A minimal interpreter of a language based on graph rewriting in OCaml")
  (depends
   (ounit :with-test)
   (minher (> 20210419))
