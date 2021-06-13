@@ -10,7 +10,6 @@ let lower = ['a'-'z']
 let upper = ['A'-'Z' '_']
 let alpha = lower | upper	      
 let alnum = digit | alpha | '\''
-
 			      
 rule token = parse
   (* Operators *)

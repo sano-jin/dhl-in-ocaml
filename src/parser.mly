@@ -25,9 +25,6 @@
 %left DOT
 %nonassoc COLMIN
 %left COMMA
-%left BACKSLASH
-%nonassoc ARROW
-%nonassoc ATOM LINK
 
 %start main
 %type <Syntax.proc> main
@@ -36,8 +33,7 @@
 
 // Main part must end with EOF (End Of File)
 main:
-  | block EOF
-    { $1 }
+  | block EOF  { $1 }
 ;
 
 // args_inner
@@ -54,41 +50,29 @@ arg:
     
 // atom
 atom:
-  // a
   | AtomName                    { Atom ($1, []) }
-				
-  // a ()
   | AtomName LPAREN RPAREN      { Atom ($1, []) }
-	     
-  // a (X_1, ..., X_n)
   | AtomName LPAREN args_inner RPAREN { Atom ($1, $3) }
 ;
-
   
 // proc
 proc:
   | arg { Ind (None, $1) }
-    
   | LinkName ARROW arg { Ind (Some $1, $3) }
-    
+  
   | proc COMMA proc { Mol ($1, $3) }
-
   | proc COLMIN proc { Rule ($1, $3)}
-
   | proc COLMIN { Rule ($1, Zero)}
-	 
+  
   | BACKSLASH LinkName DOT proc { New ($2, $4)}
-
+  
   | LPAREN proc RPAREN { $2 }
 ;
 
 // block
 block:       
-  | proc DOT block
-    { Mol ($1, $3) }
-    
+  | proc DOT block { Mol ($1, $3) }
   | proc DOT { $1 }
-
   | proc { $1 }
 
   | error
