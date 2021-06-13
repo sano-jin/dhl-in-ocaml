@@ -5,18 +5,19 @@ A minimal interpreter of a language based on graph rewriting in OCaml.
 ## Getting Started
 ### Prerequisites
 - [opam](https://opam.ocaml.org/)
+- [dune](https://github.com/ocaml/dune)
+  - You can just install `opam` and run `opam install dune`.
 
 ### Installation
 ```bash
 git clone https://github.com/sano-jin/dhl-in-ocaml
-cd src
-make
-cd ..
+cd dhl-in-ocaml
+dune build
 ```
 
 ## Usage
 
 ```bash
-src/dhl "test/append.dhl"
+dune exec dhl -- test/append.dhl
 ```
 

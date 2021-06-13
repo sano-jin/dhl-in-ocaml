@@ -30,16 +30,12 @@ jobs:
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
 
-      - run: opam install . --deps-only --with-test
-
-      - run: export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:${PATH}"
+      - run: |
+        opam install . --deps-only --with-test
+        export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin:${PATH}"
+        opam init -y
+        eval $(opam env)
       
-      - run: opam init -y
-      
-      - run: eval $(opam env)
-      
-      - run: cd src && make && make clean
-
-#      - run: opam exec -- dune build
+      - run: opam exec -- dune build
 
 #      - run: opam exec -- dune runtest
