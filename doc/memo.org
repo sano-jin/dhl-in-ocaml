@@ -4,6 +4,25 @@
 * About
   A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 
+* Project overview
+
+  LOC of the program:
+  
+  | File          | code |
+  |---------------+------|
+  | findatom.ml   |   72 |
+  | preprocess.ml |   66 |
+  | compile.ml    |   63 |
+  | util.ml       |   51 |
+  | pushatom.ml   |   46 |
+  | vm.ml         |   43 |
+  | eval.ml       |   14 |
+  | syntax.ml     |    9 |
+  |---------------+------|
+  | SUM:          |  364 |
+
+  
+  
 * Syntax
   #+NAME: Syntax of Directed HyperLMNtal
   #+begin_src ocaml
