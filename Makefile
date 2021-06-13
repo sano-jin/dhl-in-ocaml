@@ -29,5 +29,8 @@ clean:
 count:
 	./count_lines.sh '$(SRC)'
 
+cloc:
+	./cloc.sh '$(SRC)'
+
 warn:		$(COMPONENT) 
 	opam exec ocamlmktop -- $(COMPONENT) -w +A -w -31 -w -4 -o $(TARGET)

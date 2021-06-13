@@ -1,9 +1,5 @@
 (* syntax.ml *)
 
-let value default = function
-  | None -> default
-  | Some s -> s		      
-		      
 (* argument of an atom *)
 type arg =
   | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
