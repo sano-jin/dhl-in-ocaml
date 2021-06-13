@@ -1,6 +1,6 @@
 # dhl-in-ocaml
 
-Directed HyperLMNtal (DHLMNtal) interpreter written in OCaml.
+An interpreter of a language based on graph rewriting in OCaml.
 
 ## How to use
 

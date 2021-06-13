@@ -1,8 +1,22 @@
 (* main.ml *)
 
-open Syntax
 open Util
 open Compile
+open Debug_vm
+open Debug_syntax
+       
+(* read lines from the given file *)
+let read_file name : string =
+  let ic = open_in name in
+  let try_read () =
+    try Some (input_line ic) with End_of_file -> None in
+  let rec loop acc = match try_read () with
+    | Some s -> loop (s :: acc)
+    | None ->
+       close_in ic;
+       String.concat "\n" @@ List.rev @@ "" :: acc
+  in
+  loop []
 
 (* parse : string -> stmt *)
 let parse str = 
@@ -23,36 +37,32 @@ let test_file file_name i atom_list =
   Findatom.find_atoms () indegs atom_list atoms 
 
 let test_atom_list =
-  Vm.test_atom2atom_list @@
-    Vm.TAtom ("test", [
-		 Vm.TAtom ("append", [
-			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("a", []);
-					   Vm.TAtom ("nil", [])
-					 ]);
-			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("b", []);
-					   Vm.TAtom ("nil", [])
-					 ])
-			    ])
-	       ])
+  test_atom2atom_list @@
+    TAtom ("test", [
+	      TAtom ("append", [
+			TAtom ("cons", [
+				  TAtom ("a", []);
+				  TAtom ("nil", [])
+				]);
+			TAtom ("cons", [
+				  TAtom ("b", []);
+				  TAtom ("nil", [])
+				])
+		      ])
+	    ])
 
 let test_atom_list_nil =
-  Vm.test_atom2atom_list @@
-    Vm.TAtom ("test", [
-		 Vm.TAtom ("append", [
-			      Vm.TAtom ("nil", []);
-			      Vm.TAtom ("cons", [
-					   Vm.TAtom ("a", []);
-					   Vm.TAtom ("nil", [])
-					 ])
-			    ])
-	       ])
+  test_atom2atom_list @@
+    TAtom ("test", [
+	      TAtom ("append", [
+			TAtom ("nil", []);
+			TAtom ("cons", [
+				  TAtom ("a", []);
+				  TAtom ("nil", [])
+				])
+		      ])
+	    ])
 	     
-let dump =
-  Vm.dump_atoms test_atom_list
-
-		
 let reduce_file file_name i atom_list =
   let rule = flip List.nth i @@ snd @@ prep_file file_name in
   (* Vm.dump_atoms <$> *)
