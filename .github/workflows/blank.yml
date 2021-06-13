@@ -38,7 +38,11 @@ jobs:
       
       - run: eval $(opam env)
       
+      - run: cd src
+      
       - run: make
+
+      - run: make clean
 
 
 #      - run: opam exec -- dune build
