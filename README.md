@@ -17,6 +17,6 @@ dune build
 ## Usage
 
 ```bash
-dune exec dhl -- test/append.dhl
+dune exec dhl -- example/append.dhl
 ```
 
