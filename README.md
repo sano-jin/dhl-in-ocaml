@@ -1,6 +1,6 @@
 # dhl-in-ocaml
 
-An interpreter of a language based on graph rewriting in OCaml.
+A minimal interpreter of a language based on graph rewriting in OCaml.
 
 ## Getting Started
 ### Prerequisites
