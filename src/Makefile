@@ -33,5 +33,8 @@ count:
 cloc:
 	$(SCRIPT_DIR)/cloc.sh '$(SRC)'
 
+cloc-md:
+	$(SCRIPT_DIR)/cloc.sh '$(SRC)' --md | tail -n +5
+
 warn:		$(COMPONENT) 
 	opam exec ocamlmktop -- $(COMPONENT) -w +A -w -31 -w -4 -o $(TARGET)

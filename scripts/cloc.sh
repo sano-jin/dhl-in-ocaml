@@ -6,6 +6,7 @@
 
 # files=$(find $1 | grep .*'.ml$' | grep -v main.ml | grep -v .*debug.*'.ml$')
 files=$(find $1 | grep -v main.ml | grep -v .*debug.*'.ml$')
-cloc --by-file $files
-# cloc --md --by-file $files
+cloc $2 --by-file $files
+
+
 
