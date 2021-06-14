@@ -1,29 +1,31 @@
 (* findatom.ml *)
 
-open Compile
+open Breakdown
 open Util
 open Vm
-       
+
+let cons_pair_ref node_ref indeg _ =
+  safe_minus (fst !node_ref) indeg <&> fun i -> [(node_ref, i)]
+
 let check_arg (local_indegs, free_indegs) env node_ref = function
-  | CFreeLink x ->
+  | BFreeLink x ->
        begin
 	 let indeg = List.assoc x free_indegs in
-	 let update_free_addr2indeg fallback =
-	   update_assc_opt (fun _ -> fallback) ((==) node_ref) (flip safe_minus indeg) env.free_addr2indeg
+	 let update_free_addr2indeg =
+	   flip (update_assc_opt ((==) node_ref) @@ flip safe_minus indeg) env.free_addr2indeg
 	 in
 	 match List.assoc_opt x env.free2addr with 
 	 | None -> (* if the free link name has not mathced to any address *)
 	    if List.memq node_ref env.local_addrs then None (* Already matched with a local link *)
 	    else
 	      (fun s -> { env with free2addr = (x, node_ref)::env.free2addr; free_addr2indeg = s})
-	      <$> update_free_addr2indeg @@
-		    (flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
+	      <$> update_free_addr2indeg @@ cons_pair_ref node_ref indeg
 	 | Some addr ->   (* if the free link name has already mathced to the address *)
 	    if addr != node_ref then None (* not univalent *)
 	    else (fun s -> {env with free_addr2indeg = s})
-		 <$> update_free_addr2indeg @@ failwith @@ "Bug: not found"
+		 <$> update_free_addr2indeg @@ fun _ -> failwith @@ "Bug: not found"
        end
-  | CLocalLink x ->
+  | BLocalLink x ->
      match List.assoc_opt x env.local2addr with 
      | None -> if List.mem_assq node_ref env.free_addr2indeg then None (* already mathced with a free link *)
 	       else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match *)
@@ -47,17 +49,20 @@ let check_atom indegs indeg_pred (p, xs) env node_ref =
   in traverse node_ref
 			      
 let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
-  | CLocalInd (x, (p, xs)) ->
+  | BLocalInd (x, (p, xs)) ->
      check_atom indegs  ((=) @@ List.assoc x local_indegs) (p, xs)
 		{env with local2addr = insert x node_ref env.local2addr} node_ref
-  | CFreeInd (x, (p, xs)) ->
+  | BFreeInd (x, (p, xs)) ->
      let indeg = List.assoc x free_indegs in
      let env = {env with free2addr = insert x node_ref env.free2addr} in
      update_assc_opt
-       (* if has not mathced with the other free link *)
-       (fun _ -> flip List.cons [] <. pair node_ref <$> safe_minus (fst !node_ref) indeg)
        ((==) node_ref)
-       (flip safe_minus indeg) env.free_addr2indeg
+       (flip safe_minus indeg)
+
+       (* if has not mathced with the other free link *)
+       (cons_pair_ref node_ref indeg)
+
+       env.free_addr2indeg
      >>= fun free_addr2indeg -> 
      check_atom indegs ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold *)
 		{env with free_addr2indeg = free_addr2indeg} node_ref 
@@ -73,8 +78,8 @@ let rec find_atoms redirs indegs atom_list env =
   ) >>= flip (find_atoms redirs indegs atom_list) t
   in	 
   function
-  | CLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
-  | CFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
+  | BLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
+  | BFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
   | [] ->
      if redirs = () then Some env else None
   | _ -> failwith @@ "Indirection on LHS is not supported"

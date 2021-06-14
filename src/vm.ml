@@ -1,11 +1,11 @@
-(* vm.ml *)
+(** vm.ml *)
 
 open Util
        
 type vm_atom =
   | VMAtom of string * node_ref list
   | VMInd of node_ref
- and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
+ and node_ref = (int * vm_atom) ref  (** (indeg, atom) *)
 
 let get_link_name ((ref2link_id, link_id) as env) node_ref =
   second ((^) "L" <. string_of_int) @@
@@ -45,8 +45,9 @@ let dump =
 
 		      
 type env = {
-  (* all the addresses of the matched atoms on lhs. possibly not indirected from a local link. *)
   local_addrs: node_ref list;
+  (** all the addresses of the matched atoms on lhs. possibly not indirected from a local link. *)
+  
   local2addr: (int * node_ref) list;
   free2addr: (string * node_ref) list;
   free_addr2indeg: (node_ref * int) list;
