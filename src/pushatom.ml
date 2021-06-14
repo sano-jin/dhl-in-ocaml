@@ -1,6 +1,6 @@
-(* pushatom.ml *)
+(** pushatom.ml *)
 
-open Compile
+open Breakdown
 open Util
 open Vm
        
@@ -13,9 +13,9 @@ let push_arg (local2addr, free2addr) =
     | Some node_ref -> (link2addr, node_ref)
   in
   function
-  | CFreeLink x ->
+  | BFreeLink x ->
      first (pair local2addr) @@ get_link x free2addr
-  | CLocalLink x ->
+  | BLocalLink x ->
      first (flip pair free2addr) @@ get_link x local2addr
 
 let push_atom (local_indegs, free_indegs) link2addrs =
@@ -29,16 +29,16 @@ let push_atom (local_indegs, free_indegs) link2addrs =
   in
   let get_links = List.fold_left_map push_arg link2addrs in
   function
-  | CFreeInd (x, (p, xs)) ->
+  | BFreeInd (x, (p, xs)) ->
      let ((local2addr, free2addr), xs) = get_links xs in
      (local2addr, get_atom (x, VMAtom (p, xs)) free_indegs free2addr)
-  | CLocalInd (x, (p, xs)) ->
+  | BLocalInd (x, (p, xs)) ->
      let ((local2addr, free2addr), xs) = get_links xs in
      (get_atom (x, VMAtom (p, xs)) local_indegs local2addr, free2addr)
-  | CRedir (x, y) ->
+  | BRedir (x, y) ->
      if List.assoc x free_indegs = 0 then link2addrs
      else	  
-       let ((local2addr, free2addr), y) = push_arg link2addrs @@ CFreeLink y in
+       let ((local2addr, free2addr), y) = push_arg link2addrs @@ BFreeLink y in
        (local2addr, get_atom (x, VMInd y) free_indegs free2addr)
 
 let push_atoms (local_indegs, free_indegs) free_addr2indeg free2addrs inds =

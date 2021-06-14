@@ -1,4 +1,4 @@
-(* util.ml *)
+(** util.ml *)
 
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
@@ -15,7 +15,7 @@ let first f (a, b) = (f a, b)
 let set_minus l r = List.filter (not <. flip List.mem r) l
 let set_minus_q l r = List.filter (not <. flip List.memq r) l
 let id x = x
-let partitionEithers l = List.partition_map id l (* monomorphism restriction *)
+let partitionEithers l = List.partition_map id l
 let curry f x y = f (x, y)
 let uncurry f (x, y) = f x y
 let rec uncurried_zip = function
@@ -28,6 +28,7 @@ let sym_diff l r =
 
 let pair x y = (x, y)
 let const x _ = x
+let zip_const c = List.map @@ flip pair c
 
 let (<|>) l f = 
   if Option.is_some l then l
@@ -45,17 +46,18 @@ let rec insert x v = function
        else (x, v)::t
      else h::insert x v t
 
-let rec update_assc_opt fallback pred f = function
+let rec update_assc_opt pred f fallback = function
   | [] -> fallback ()
   | (y, v) as h ::t ->
      if pred y then flip List.cons t <. pair y <$> f v
-     else h <::> update_assc_opt fallback pred f t
+     else h <::> update_assc_opt pred f fallback t
 
 let update_ref f r = r := f !r
 
 let safe_minus x y =
   if x < y then None else Some (x - y)
 
+			       
 let maybe default = function
   | None -> default
   | Some s -> s 

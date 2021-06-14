@@ -1,9 +1,9 @@
-(* main.ml *)
+(** main.ml *)
 
 open Util
-open Compile
+open Breakdown
        
-(* read lines from the given file *)
+(** read lines from the given file *)
 let read_file name =
   let ic = open_in name in
   let try_read () =
@@ -16,26 +16,28 @@ let read_file name =
   in
   loop []
 
-(* parse : string -> stmt *)
-let parse str = 
-  Parser.main Lexer.token 
-  @@ Lexing.from_string str
+(** parse : string -> proc *)
+let parse = Parser.main Lexer.token <. Lexing.from_string
 
-let prep_file =
-  partit <. parse <. read_file
-
+(** Reduce as many as possible.
+    Tail recursive (as it should be).
+ *) 
 let rec run_many dumper i rules atoms =
   print_string @@ string_of_int i ^ ": " ^ dumper atoms ^ "\n";
-  run_many dumper (succ i) rules <$> Eval.run_once atoms rules |> maybe atoms 
+  match Eval.run_once atoms rules with
+  | None -> atoms
+  | Some atoms -> run_many dumper (succ i) rules atoms
 
 let run_file dumper file_name  =
-  match file_name |> read_file |> parse |> partit with
+  match file_name |> read_file |> parse |> breakdown with
   | ((((local_indegs, []), []), inds), rules) ->
      let final_state = run_many dumper 0 rules @@ Eval.init_atoms local_indegs @@ List.rev inds in
      print_string @@ "Final state: " ^ dumper final_state ^ "\n"
   | _ -> failwith "free links are not allowed in the initial graph"
 
-let valid_options = ["-dbg"]  
+let valid_options = ["-dbg"]
+
+(** The top level entry point *)		      
 let () =
   match List.tl @@ Array.to_list Sys.argv with
   | [] -> failwith @@ "no input file"
