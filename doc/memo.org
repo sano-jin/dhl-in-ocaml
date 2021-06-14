@@ -8,22 +8,55 @@
 
   LOC of the program:
   
-  | File          | code |
-  |---------------+------|
-  | findatom.ml   |   72 |
-  | preprocess.ml |   66 |
-  | compile.ml    |   63 |
-  | util.ml       |   51 |
-  | pushatom.ml   |   46 |
-  | vm.ml         |   43 |
-  | eval.ml       |   14 |
-  | syntax.ml     |    9 |
-  |---------------+------|
-  | SUM:          |  364 |
+  | File            | LOC | Description                                               |
+  |-----------------+-----+-----------------------------------------------------------|
+  | [[findatom.ml]]     |  72 | performs graph pattern matching                           |
+  | [[parser.mly]]      |  70 | Defines a grammer for parsing                             |
+  | [[preprocess.ml]]   |  66 | Convert local link names to ids and collect indegree data |
+  | [[compile.ml]]      |  63 | Check rule conditions break down atoms                    |
+  | [[util.ml]]         |  51 | Some utility functions                                    |
+  | [[pushatom.ml]]     |  46 | Generate and push atoms                                   |
+  | [[vm.ml]]           |  45 | Definition of atom and pritty printer for them            |
+  | [[main.ml]]         |  40 | The main execution loop                                   |
+  | [[lexer.mll]]       |  34 | Defies a token for lexing                                 |
+  | [[debug_syntax.ml]] |  32 | Pritty printer for a parsed input for debugging           |
+  | [[debug_vm.ml]]     |  24 | Dumper of atoms for debugging                             |
+  | [[eval.ml]]         |  17 | The evaluater                                             |
+  | [[syntax.ml]]       |   9 | The abstract syntax definition                            |
+  | SUM:            | 569 |                                                           |
 
-  
-  
+
 * Syntax
+
+** Identifiers
+   - Link name :: starts from capital letters or =_=
+     - e.g. =X=, =Link123=, =_foo'=
+     - we use \(X\) or \(Y\) to denote them in the following description.
+   - Atom name[[spec:1] :: starts from capital letters.
+     - e.g. =p=, =atom123=, =bar_fooBar'=
+     - we use \(p\) or \(q\) to denote them in the following description.
+   
+** Syntax of a process
+
+   The syntax of a process (program) \(P\) is defined inductive as the following:
+
+   - Null :: \(\emptyset\)
+     - This is not allowed to write explicitly by users.
+   - Atom :: \(p(X_1, ..., X_n)\) where \(n \leq 0\)
+     - The node of a graph
+   - Molecule :: \((P, P)\)
+   - Link creation :: \(\nu X. P\)
+     - Hides link \(X\) in \(P\)
+     - \(\nu\) is denoted as =\= in the concrete syntax.
+   - Rule :: \((P \vdash Q)\)
+     - Defines a rule to reduce graph
+
+       
+  [spec:1] =->= is also allowed but not intended for a user to write.
+
+* Implementation
+  
+** Syntax
   #+NAME: Syntax of Directed HyperLMNtal
   #+begin_src ocaml
     (* argument of an atom *)
@@ -40,7 +73,7 @@
       | Rule of proc * proc         (* rule. e.g. P :- Q. *)
   #+end_src
 
-* VM
+** VM
   #+begin_src ocaml
     (* node *)
     type vm_atom =
