@@ -41,21 +41,21 @@
 
 ## LOC
 
-	| File                               |  LOC | 
-	| :--------------------------------- | ---: | 
-	| [findatom.ml](findatom.ml)         |   74 | 
-    | [parser.mly](parser.mly)           |   70 | 
-    | [util.ml](util.ml)                 |   52 | 
-    | [breakdown.ml](breakdown.ml)       |   52 | 
-    | [pushatom.ml](pushatom.ml)         |   46 | 
-    | [vm.ml](vm.ml)                     |   45 | 
-    | [link_check.ml](link_check.ml)     |   44 | 
-    | [main.ml](main.ml)                 |   38 | 
-    | [alpha.ml](alpha.ml)               |   34 | 
-    | [lexer.mll](lexer.mll)             |   34 | 
-    | [debug_syntax.ml](debug_syntax.ml) |   32 | 
-    | [debug_vm.ml](debug_vm.ml)         |   24 | 
-    | [eval.ml](eval.ml)                 |   17 | 
-    | [syntax.ml](syntax.ml)             |    9 | 
-    | SUM:                               |  570 | 
+| File                               |  LOC | 
+| :--------------------------------- | ---: | 
+| [findatom.ml](findatom.ml)         |   74 | 
+| [parser.mly](parser.mly)           |   70 | 
+| [util.ml](util.ml)                 |   52 | 
+| [breakdown.ml](breakdown.ml)       |   52 | 
+| [pushatom.ml](pushatom.ml)         |   46 | 
+| [vm.ml](vm.ml)                     |   45 | 
+| [link_check.ml](link_check.ml)     |   44 | 
+| [main.ml](main.ml)                 |   38 | 
+| [alpha.ml](alpha.ml)               |   34 | 
+| [lexer.mll](lexer.mll)             |   34 | 
+| [debug_syntax.ml](debug_syntax.ml) |   32 | 
+| [debug_vm.ml](debug_vm.ml)         |   24 | 
+| [eval.ml](eval.ml)                 |   17 | 
+| [syntax.ml](syntax.ml)             |    9 | 
+| SUM:                               |  570 | 
     
