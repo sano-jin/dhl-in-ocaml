@@ -53,8 +53,9 @@ let collect_link_info atoms =
 
 
        
-
-
+(** Check link condition of the given rule.
+    Uses the collected link_info on lhs/rhs returned by `collect_link_info`.
+ *)
 let check_link_cond ((lhs_indegs, lhs_free_incidences),
 		     (rhs_indegs, rhs_free_incidences)) =
   let free_names = List.map fst <. snd in
