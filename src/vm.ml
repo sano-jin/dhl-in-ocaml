@@ -14,19 +14,29 @@ let get_link_name ((ref2link_id, link_id) as env) node_ref =
     | Some i -> (env, i)
 
 let rec dump_arg ((dumped_nodes, addr_env) as env) node_ref =
-  if List.memq node_ref dumped_nodes || fst !node_ref <> 1
-  then first (pair dumped_nodes) @@ get_link_name addr_env node_ref
-  else dump_atom false env node_ref 
+  if List.memq node_ref dumped_nodes || fst !node_ref <> 1 
+  then
+    (* if already have dumped 
+     * or the indegree is not 1 and cannot *embed* the atom as an argument *)
+    first (pair dumped_nodes) @@ get_link_name addr_env node_ref
+  else
+    (* *embed* the atom as an argument *)
+    dump_atom false env node_ref 
 and dump_atom is_top_level ((dumped_nodes, addr_env) as env) node_ref =
   match snd !node_ref with
   | VMInd y ->
-     if is_top_level then 
+     (* If this is the indirection on the *root* of the dumped atom tree,
+      *	then we should remember that we have dumped that indirection.
+      *	Otherwise, we will just print the link to indirect. *)
+     if is_top_level then
        first (pair @@ node_ref::dumped_nodes) @@ get_link_name addr_env y
-     else first (pair dumped_nodes) @@ get_link_name addr_env node_ref
+     else
+       first (pair dumped_nodes) @@ get_link_name addr_env node_ref
   | VMAtom (p, xs) ->
-     second (fun xs -> p ^ if xs = [] then ""
-			   else "(" ^ String.concat ", " xs ^ ")")
-     @@ List.fold_left_map dump_arg (first (List.cons node_ref) env) xs
+     let (env, xs) = List.fold_left_map dump_arg (first (List.cons node_ref) env) xs in
+     (env, p ^ if xs = [] then ""
+	       else "(" ^ String.concat ", " xs ^ ")")
+     
 
 let dump_ind ((dumped_nodes, addr_env) as env) node_ref =
   if List.memq node_ref dumped_nodes then (env, None)
@@ -37,13 +47,31 @@ let dump_ind ((dumped_nodes, addr_env) as env) node_ref =
 	let (addr_env, link) = get_link_name addr_env node_ref in
 	let env = second (const addr_env) env in
 	second ((^) @@ link ^ " -> ") @@ dump_atom true env node_ref 
-						  
+
+
+(** A helper function for `tpl_sort` *)  
+let rec visit (l, visited) node_ref =
+  if List.memq node_ref visited then (l, visited)
+  else
+    let visited = node_ref::visited in
+    let xs = match snd !node_ref with
+      | VMAtom (_, xs) -> xs
+      | VMInd y -> [y]
+    in
+    first (List.cons node_ref)
+    @@ List.fold_left visit (l, visited) xs 
+
+(** Topological sort *)
+let tpl_sort = fst <. List.fold_left visit ([], []) 
+
+(** Pretty printer for printing nodes *)				     
 let dump =
   String.concat ". "
   <. List.filter_map id <. snd <. List.fold_left_map dump_ind ([], ([], 0)) 
-  <. List.stable_sort (fun r1 r2 -> fst !r1 - fst !r2)
-
+  <. tpl_sort
 		      
+
+(** An environment for matching and pushout *)
 type env = {
   local_addrs: node_ref list;
   (** all the addresses of the matched atoms on lhs. possibly not indirected from a local link. *)
