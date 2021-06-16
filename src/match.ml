@@ -8,38 +8,36 @@ let cons_pair_ref node_ref indeg _ =
   let+ new_indeg = safe_minus (fst !node_ref) indeg in
   [(node_ref, new_indeg)]
 
-    
-let check_arg (local_indegs, free_indegs) env node_ref = function
+
+let update_free_addr2indeg node_ref indeg env =
+  let+ free_addr2indeg =
+    update_assc_opt
+      ((==) node_ref)
+      (flip safe_minus indeg)
+      (cons_pair_ref node_ref indeg)
+      env.free_addr2indeg
+  in
+  {env with free_addr2indeg = free_addr2indeg}	   
+
+
+let check_arg (local_indegs, free_indegs) env node_ref =
+  function
   | BFreeLink x ->
        begin
 	 let indeg = List.assoc x free_indegs in
-	 let update_free_addr2indeg =
-	   flip (update_assc_opt ((==) node_ref) @@ flip safe_minus indeg) env.free_addr2indeg
-	 in
 	 match List.assoc_opt x env.free2addr with
 	 | None -> 
 	    (* if the free link name has not mathced to any address *)
 	    if List.memq node_ref env.local_addrs then None (* Already matched with a local link  *)
 	    else
-	      let+ free_addr2indeg =
-		update_free_addr2indeg @@ cons_pair_ref node_ref indeg
-	      in
-	      { env with
-		(* Since we have checked that the `x` is **not** in the `env.free2addr`,
-		   `free2addr = insert x node_ref env.free2addr` should also work.
-		 *)
-		free2addr = (x, node_ref)::env.free2addr;
-		free_addr2indeg = free_addr2indeg
-	      }
-		
+	      let+ env = update_free_addr2indeg node_ref indeg env in
+	      {env with free2addr = (x, node_ref)::env.free2addr}
+	    
 	 | Some addr ->
 	    (* if the free link name has already mathced to the address  *)
 	    if addr != node_ref then None (* has matched to other address  *)
 	    else
-	      let+ free_addr2indeg =
-		update_free_addr2indeg @@ fun _ -> failwith @@ "Bug: not found"
-	      in
-	      {env with free_addr2indeg = free_addr2indeg}
+	      update_free_addr2indeg node_ref indeg env
        end
   | BLocalLink x ->
      match List.assoc_opt x env.local2addr with 
@@ -87,17 +85,7 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
        node_ref
   | BFreeInd (x, (p, xs)) ->
      let indeg = List.assoc x free_indegs in
-
-     let* free_addr2indeg = 
-       update_assc_opt
-	 ((==) node_ref)
-	 (flip safe_minus indeg)
-	 
-	 (* if has not mathced with the other free link  *)
-	 (cons_pair_ref node_ref indeg)
-	 
-	 env.free_addr2indeg
-     in
+     let* env = update_free_addr2indeg node_ref indeg env in
      check_atom
        indegs ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold  *)
        {env with
@@ -106,7 +94,6 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
 	    the `node_ref` is lookuped from the `env.free2addr` in the former phase (`try_deref` in `find_atoms`).        
 	  *)
 	 free2addr = insert x node_ref env.free2addr;
-	 free_addr2indeg = free_addr2indeg
        }
        node_ref 
   | _ -> failwith @@ "Indirection on LHS is not supported"

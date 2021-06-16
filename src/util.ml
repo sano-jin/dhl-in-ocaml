@@ -4,11 +4,11 @@ let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
 
 let (>>=) = Option.bind
-let (let*) = Option.bind
+let ( let* ) = Option.bind
 
 let (<$>) = Option.map
 let (<&>) x f = Option.map f x
-let (let+) x f = Option.map f x
+let ( let+ ) x f = Option.map f x
 
 let flip f x y = f y x  
 
