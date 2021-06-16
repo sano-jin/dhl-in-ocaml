@@ -25,7 +25,7 @@ let check_arg (local_indegs, free_indegs) env node_ref = function
 		update_free_addr2indeg @@ cons_pair_ref node_ref indeg
 	      in
 	      { env with
-		(* Since we have checked that the `x` is not in the `env.free2addr`,
+		(* Since we have checked that the `x` is **not** in the `env.free2addr`,
 		   `free2addr = insert x node_ref env.free2addr` should also work.
 		 *)
 		free2addr = (x, node_ref)::env.free2addr;
@@ -74,15 +74,20 @@ let check_atom indegs indeg_pred (p, xs) env node_ref =
 	      
 let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
   | BLocalInd (x, (p, xs)) ->
-     check_atom indegs  ((=) @@ List.assoc x local_indegs) (p, xs)
-		{env with local2addr = insert x node_ref env.local2addr} node_ref
+     check_atom
+       indegs
+       ((=) @@ List.assoc x local_indegs)
+       (p, xs)
+
+       (* if x is the key of `addr` in `env.local2addr`, then the `addr` should be equal to `node_ref`.
+	  Since is the `x` is in the `env.local2addr`, then we should have conducted dereference hence
+	  the `node_ref` is lookuped from the `env.local2addr` in the former phase (`try_deref` in `find_atoms`).        
+	*)
+       {env with local2addr = insert x node_ref env.local2addr}
+       node_ref
   | BFreeInd (x, (p, xs)) ->
      let indeg = List.assoc x free_indegs in
 
-     (* if x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
-	Since is the `x` is in the `env.free2addr`, then we should have conducted dereference hence
-	the the `node_ref` is lookuped from the `env.free2addr` in the former phase (`try_deref` in `find_atoms`).        
-      *)
      let* free_addr2indeg = 
        update_assc_opt
 	 ((==) node_ref)
@@ -96,6 +101,10 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
      check_atom
        indegs ((<=) 0) (p, xs)  (* the predicate ((<=) 0) should always hold  *)
        {env with
+	 (* if x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
+	    Since is the `x` is in the `env.free2addr`, then we should have conducted dereference hence
+	    the `node_ref` is lookuped from the `env.free2addr` in the former phase (`try_deref` in `find_atoms`).        
+	  *)
 	 free2addr = insert x node_ref env.free2addr;
 	 free_addr2indeg = free_addr2indeg
        }

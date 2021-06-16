@@ -83,7 +83,7 @@
      and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
   #+end_src
   
-    
+  
   
 
   
