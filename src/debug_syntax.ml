@@ -35,3 +35,4 @@ let rec string_of_proc priority = function
      if priority > 3 then "(" ^ str_of_new ^ ")"
      else str_of_new
      
+let string_of_proc = string_of_proc 0

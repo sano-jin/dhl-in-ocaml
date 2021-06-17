@@ -53,6 +53,9 @@ let rec alpha_proc env link_id = function
   | Rule (l, r) -> (link_id, [Either.Right (l, r)])
 
 (** Convert local link names to fresh ids and partition atoms and rules *)     
-let alpha = second partitionEithers <. alpha_proc [] 0
+let alpha proc =
+  print_string (Debug_syntax.string_of_proc proc ^ "\n");
+  (second partitionEithers <. alpha_proc [] 0) proc
+	      
 
 

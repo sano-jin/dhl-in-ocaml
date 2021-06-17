@@ -63,7 +63,7 @@ let rec insert x v = function
 let rec update_assc_opt pred f fallback = function
   | [] -> fallback ()
   | (y, v) as h ::t ->
-     if pred y then flip List.cons t <. pair y <$> f v
+     if pred y then let+ v = f v in (y, v)::t
      else h <::> update_assc_opt pred f fallback t
 
 let update_ref f r = r := f !r

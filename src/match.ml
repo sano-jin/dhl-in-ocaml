@@ -28,8 +28,10 @@ let check_arg (local_indegs, free_indegs) env node_ref =
 	 match List.assoc_opt x env.free2addr with
 	 | None -> 
 	    (* if the free link name has not mathced to any address *)
+	    (*
 	    if List.memq node_ref env.local_addrs then None (* Already matched with a local link  *)
 	    else
+	     *)
 	      let+ env = update_free_addr2indeg node_ref indeg env in
 	      {env with free2addr = (x, node_ref)::env.free2addr}
 	    
@@ -102,10 +104,18 @@ let check_ind ((local_indegs, free_indegs) as indegs) env node_ref = function
 let rec find_atoms env redirs indegs atom_list =
   let check_ind_ = flip @@ check_ind indegs env in
   let try_deref x link2addr ind t =
-    let* env = match List.assoc_opt x link2addr with
-      | None -> one_of (check_ind_ ind) atom_list
-      | Some node_ref -> check_ind_ ind node_ref
-    in   find_atoms env redirs indegs atom_list t
+    match List.assoc_opt x link2addr with
+    | None ->
+       let rec try_match = function
+	 | [] -> None (* no atom list remaining *)
+	 | node_ref::node_refs ->
+	    ( let* env = check_ind_ ind node_ref in
+	      find_atoms env redirs indegs atom_list t
+	    ) <|> fun _ -> try_match node_refs
+       in try_match atom_list
+    | Some node_ref ->
+       let* env = check_ind_ ind node_ref in
+       find_atoms env redirs indegs atom_list t
   in	 
   function
   | BLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t

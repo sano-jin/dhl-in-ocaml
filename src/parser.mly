@@ -22,10 +22,12 @@
 %token EOF 
 
 (*  Operator associativity *)
-%left DOT
+(* %left DOT *)
+
 %nonassoc COLMIN
 %left COMMA
-
+%nonassoc DOT
+      
 %start main
 %type <Syntax.proc> main
 
