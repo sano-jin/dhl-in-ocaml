@@ -19,13 +19,6 @@ let collect_incidences = List.fold_left collect_incidence ([], [])
 	    
 
 					
-(** A helper function for `collect_indeg_arg` and `collect_indeg` *)					
-let rec update fallback f x = function
-  | [] -> [x, fallback ()]
-  | (y, v) as h::t ->
-     if x = y then (y, f v) :: t
-     else h::update fallback f x t
-		    
 (** collect indegs of `p_arg` and also check the serial condition *)
 let rec collect_indeg_arg ((locals, frees) as links) = function
   | ALocalLink (x, link_name) ->

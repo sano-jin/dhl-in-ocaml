@@ -60,6 +60,14 @@ let rec insert x v = function
        else (x, v)::t
      else h::insert x v t
 
+(** A helper function for `collect_indeg_arg` and `collect_indeg` *)					
+let rec update fallback f x = function
+  | [] -> [x, fallback ()]
+  | (y, v) as h::t ->
+     if x = y then (y, f v) :: t
+     else h::update fallback f x t
+		    
+		    
 let rec update_assc_opt pred f fallback = function
   | [] -> fallback ()
   | (y, v) as h ::t ->
