@@ -69,7 +69,7 @@ let check_ind local_indegs env node_ref = function
      check_atom
        local_indegs (const true) (p, xs)  (* no indeg checking for a free link *)
        {env with
-	 (* If x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
+	 (* if x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
 	    Since is the `x` is in the `env.free2addr`, then we should have conducted dereference hence
 	    the `node_ref` is lookuped from the `env.free2addr` in the former phase (`try_deref` in `find_atoms`).        
 	  *)
@@ -79,6 +79,10 @@ let check_ind local_indegs env node_ref = function
   | _ -> failwith @@ "Indirection on LHS is not supported"
  
 
+let dump_free_indegs free_indegs =
+     print_string @@ (String.concat ", " @@ List.map (string_of_int <. snd) free_indegs) ^ "\n"
+  
+		       
 let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list =
   let check_ind_ = flip @@ check_ind local_indegs env in
   let try_deref x link2addr ind t =
@@ -101,15 +105,20 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
   | [] ->
      (* calculate free_addr2indeg *)
      let free_addr2indeg =
+       dump_free_indegs free_indegs;
        let free_addr2before_indeg =
 	 List.map (fun (_, node_ref) -> (node_ref, fst !node_ref)) env.free2addr
        in
-       List.fold_left (flip @@ fun (link_name, indeg) ->
-		 let node_ref = List.assoc link_name env.free2addr in
-		 update (fun _ -> failwith "Bug") ((-) indeg) node_ref)
-		free_addr2before_indeg
-		free_indegs
+       dump_free_indegs free_addr2before_indeg;
+       List.fold_left
+	 (flip
+	  @@ fun (link_name, indeg) ->
+	     let node_ref = List.assoc link_name env.free2addr in
+	     update (fun _ -> failwith "Bug") (flip (-) indeg) node_ref)
+	 free_addr2before_indeg
+	 free_indegs
      in
+     dump_free_indegs free_addr2indeg;
      let env = {env with free_addr2indeg = free_addr2indeg} in
 	   (* possibly checks the additional free redirection condition here  *)
      if redirs = () then Some env else None
