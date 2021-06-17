@@ -59,7 +59,7 @@ let check_ind local_indegs env node_ref = function
        ((=) @@ List.assoc x local_indegs)
        (p, xs)
 
-       (* if x is the key of `addr` in `env.local2addr`, then the `addr` should be equal to `node_ref`.
+       (* If x is the key of `addr` in `env.local2addr`, then the `addr` should be equal to `node_ref`.
 	  Since is the `x` is in the `env.local2addr`, then we should have conducted dereference hence
 	  the `node_ref` is lookuped from the `env.local2addr` in the former phase (`try_deref` in `find_atoms`).        
 	*)
@@ -69,7 +69,7 @@ let check_ind local_indegs env node_ref = function
      check_atom
        local_indegs (const true) (p, xs)  (* no indeg checking for a free link *)
        {env with
-	 (* if x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
+	 (* If x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
 	    Since is the `x` is in the `env.free2addr`, then we should have conducted dereference hence
 	    the `node_ref` is lookuped from the `env.free2addr` in the former phase (`try_deref` in `find_atoms`).        
 	  *)
@@ -104,9 +104,9 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
        let free_addr2before_indeg =
 	 List.map (fun (_, node_ref) -> (node_ref, fst !node_ref)) env.free2addr
        in
-       List.fold_left (fun free_addr2before_indeg (link_name, indeg) ->
+       List.fold_left (flip @@ fun (link_name, indeg) ->
 		 let node_ref = List.assoc link_name env.free2addr in
-		 update (fun _ -> failwith "Bug") ((-) indeg) node_ref free_addr2before_indeg)
+		 update (fun _ -> failwith "Bug") ((-) indeg) node_ref)
 		free_addr2before_indeg
 		free_indegs
      in
