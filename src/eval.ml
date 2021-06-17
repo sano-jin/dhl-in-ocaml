@@ -14,7 +14,7 @@ let remove_atom node_ref =
 
 (** Try to reduce one step with the given atoms and a rule *)				      
 let reduce atom_list (BRule (((lhs_indegs, _), lhs_atoms), (((rhs_indegs, _), rhs_atoms), _), _)) =
-  let+ env = Match.find_atoms () lhs_indegs atom_list lhs_atoms in
+  let+ env = Match.match_ () lhs_indegs atom_list lhs_atoms in
   let local_addrs = List.map snd env.local2addr in
   let atom_list = set_minus_q atom_list local_addrs in
   List.iter remove_atom local_addrs;

@@ -118,4 +118,4 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 
-let find_atoms redirs indegs atom_list = find_atoms empty_env redirs indegs atom_list
+let match_ = find_atoms empty_env 
