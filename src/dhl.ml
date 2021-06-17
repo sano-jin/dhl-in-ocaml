@@ -38,7 +38,7 @@ let run_file dumper file_name  =
 let valid_options = ["-dbg"]
 
 (** The top level entry point *)		      
-let () =
+let main () =
   match List.tl @@ Array.to_list Sys.argv with
   | [] -> failwith @@ "no input file"
   | file_name::options ->

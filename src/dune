@@ -3,6 +3,6 @@
   
 (ocamllex lexer)
 
-(executable
- (public_name dhl)
- (name main))
+(library
+ (name dhl)
+ (public_name dhl))
