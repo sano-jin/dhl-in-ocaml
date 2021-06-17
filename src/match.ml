@@ -79,10 +79,6 @@ let check_ind local_indegs env node_ref = function
   | _ -> failwith @@ "Indirection on LHS is not supported"
  
 
-let dump_free_indegs free_indegs =
-     print_string @@ (String.concat ", " @@ List.map (string_of_int <. snd) free_indegs) ^ "\n"
-  
-		       
 let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list =
   let check_ind_ = flip @@ check_ind local_indegs env in
   let try_deref x link2addr ind t =
@@ -105,11 +101,9 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
   | [] ->
      (* calculate free_addr2indeg *)
      let free_addr2indeg =
-       dump_free_indegs free_indegs;
        let free_addr2before_indeg =
 	 List.map (fun (_, node_ref) -> (node_ref, fst !node_ref)) env.free2addr
        in
-       dump_free_indegs free_addr2before_indeg;
        List.fold_left
 	 (flip
 	  @@ fun (link_name, indeg) ->
@@ -118,7 +112,6 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
 	 free_addr2before_indeg
 	 free_indegs
      in
-     dump_free_indegs free_addr2indeg;
      let env = {env with free_addr2indeg = free_addr2indeg} in
 	   (* possibly checks the additional free redirection condition here  *)
      if redirs = () then Some env else None
