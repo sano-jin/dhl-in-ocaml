@@ -1,32 +1,38 @@
 #+title: A POC of Directed HyperLMNtal 
 #+author: Jin SANO
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
+#+OPTIONS: ^:nil
 
 * About
   A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 
 * Project overview
 
-  LOC of the program:
-  
-  | File            | LOC | Description                                                         |
-  |-----------------+-----+---------------------------------------------------------------------|
-  | [[findatom.ml]]     |  74 | Performs graph pattern matching                                     |
-  | [[parser.mly]]      |  70 | Defines a grammer for parsing                                       |
-  | [[util.ml]]         |  52 | Some utility functions                                              |
-  | [[breakdown.ml]]    |  52 | Check rule conditions and break down atoms                          |
-  | [[pushatom.ml]]     |  46 | Generate and push atoms                                             |
-  | [[vm.ml]]           |  45 | Definition of atom and pretty printer for them                      |
-  | [[link_check.ml]]   |  44 | Collect link information and check them                             |
-  | [[main.ml]]         |  38 | The main execution loop                                             |
-  | [[alpha.ml]]        |  34 | Convert local link names to fresh ids and partition atoms and rules |
-  | [[lexer.mll]]       |  34 | Defies a token for lexing                                           |
-  | [[debug_syntax.ml]] |  32 | Pretty printer for a parsed input for debugging                     |
-  | [[debug_vm.ml]]     |  24 | Dumper of atoms for debugging                                       |
-  | [[eval.ml]]         |  17 | The evaluater                                                       |
-  | [[syntax.ml]]       |   9 | The abstract syntax definition                                      |
-  | SUM:            | 570 |                                                                     |
+** Source programs
+   - util.ml		:: Some utility functions
 
-  
+*** Compiler
+
+**** Lexical/Syntax analysis
+     - syntax.ml	:: The abstract syntax definition
+     - lexer.mll	:: Defines a token for lexing
+     - parser.mly 	:: Defines a grammar for parsing
+
+**** Semantic analysis
+     - alpha.ml		:: Convert local link names to fresh ids and partition atoms and rules
+     - link_check.ml	:: Collect link information and check them
+     - breakdown.ml	:: Check rule conditions and break down atoms
+
+*** VM
+    - vm.ml		:: Type definition of an atom and pretty printer for its multi-set
+    - match.m		:: Perform graph pattern matching
+    - pushout.ml	:: Generate and push atoms
+    - eval.ml		:: The one step reducer
+
+*** Repl
+    - main.ml		:: File loader and the main execution loop
+
+
 * Syntax
 
 ** Identifiers
@@ -53,35 +59,37 @@
      - Defines a rule to reduce graph
 
        
-  [spec:1] =->= is also allowed but not intended for a user to write.
+   [spec:1] =->= is also allowed but not intended for a user to write.
 
 * Implementation
+
+  [[./memory_management.org][Note about memory management]] 
   
 ** Syntax
-  #+NAME: Syntax of Directed HyperLMNtal
-  #+begin_src ocaml
-    (* argument of an atom *)
-    type arg =
-      | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
-      | Link of string             (* link. e.g. X *)
+   #+NAME: Syntax of Directed HyperLMNtal
+   #+begin_src ocaml
+     (* argument of an atom *)
+     type arg =
+       | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
+       | Link of string             (* link. e.g. X *)
 
-    (* process *)
-    type proc = 
-      | Zero
-      | Ind of string option * arg  (* indirection. e.g. X -> a(Y) *)
-      | Mol of proc * proc          (* molecule. e.g. (P, Q) *)  
-      | New of string * proc        (* link creation. e.g. \X.P *)
-      | Rule of proc * proc         (* rule. e.g. P :- Q. *)
-  #+end_src
+     (* process *)
+     type proc = 
+       | Zero
+       | Ind of string option * arg  (* indirection. e.g. X -> a(Y) *)
+       | Mol of proc * proc          (* molecule. e.g. (P, Q) *)  
+       | New of string * proc        (* link creation. e.g. \X.P *)
+       | Rule of proc * proc         (* rule. e.g. P :- Q. *)
+   #+end_src
 
 ** VM
-  #+begin_src ocaml
-    (* node *)
-    type vm_atom =
-      | VMAtom of string * node_ref list
-      | VMInd of node_ref
-     and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
-  #+end_src
+   #+begin_src ocaml
+     (* node *)
+     type vm_atom =
+       | VMAtom of string * node_ref list
+       | VMInd of node_ref
+      and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
+   #+end_src
   
   
   
