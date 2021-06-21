@@ -32,6 +32,7 @@ let run_file dumper file_name  =
   match file_name |> read_file |> parse |> breakdown with
   | ((((local_indegs, []), []), inds), rules) ->
      let final_state = run_many dumper 0 rules @@ Eval.init_atoms local_indegs inds in
+     Vm.clean_atom_list final_state;
      print_string @@ "Final state: " ^ dumper final_state ^ "\n"
   | _ -> failwith "free links are not allowed in the initial graph"
 

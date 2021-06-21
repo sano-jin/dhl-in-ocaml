@@ -97,15 +97,11 @@ let free_atom node_ref =
   | (indeg, VMInd x) -> node_ref := (indeg, VMAtom ("~->", [x]))
 
 
-(*
-(***********)
-(* Delete indirection atoms on atom list *)
-let is_not_indir node_ref =
-  match snd !node_ref with
-  | VMInd _ -> false
-  | VMAtom _ -> true
-
-let rec traverse node_ref_mut traversed_indirection =
+(** Traverse indirection atoms and returns the pointed atom.
+    There is no worring of circulating indirection
+    (if that exists, then the basic design is wrong).
+ *)
+let rec traverse node_ref_mut =
   let node_ref = !node_ref_mut in
   let indeg = fst !node_ref in
   match snd !node_ref with
@@ -115,7 +111,16 @@ let rec traverse node_ref_mut traversed_indirection =
     );
     let node_ref = traverse y in
     node_ref_mut := node_ref;
+    (*    print_string ">>>> traversing indirection atom <<<<\n"; *)
     node_ref
   | VMAtom (_, _) -> node_ref
-		  
- *)
+
+
+		       
+(** resolve indirections in an atom list *)
+let clean_atom_list atom_list =
+  let clean_atom node_ref =
+    match snd !node_ref with
+    | VMInd _ -> failwith "Bug: indirection must not be dereferenced from an atom list"
+    | VMAtom (_, xs) -> List.map traverse xs 
+  in ignore @@ List.map clean_atom atom_list

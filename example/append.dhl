@@ -11,7 +11,7 @@ R -> append(cons(H, T), L)
 R -> append(nil, L)
 :- R -> L.
 
-
-% cons @@
-R -> cons(H, T)
-:- R -> c(H, T).
+% 
+% % cons @@
+% R -> cons(H, T)
+% :- R -> c(H, T).

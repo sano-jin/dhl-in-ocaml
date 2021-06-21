@@ -5,25 +5,6 @@ open Util
 open Vm
 
 
-(** Traverse indirection atoms and returns the pointed atom.
-    There is no worring of circulating indirection
-    (if that exists, then the basic design is wrong).
- *)
-let rec traverse node_ref_mut =
-  let node_ref = !node_ref_mut in
-  let indeg = fst !node_ref in
-  match snd !node_ref with
-  | VMInd y as vm_ind ->
-    ( if indeg = 1 then free_atom node_ref (* Free if only I am pointing *)
-      else node_ref := (pred indeg, vm_ind) (* Else decrease the indegree by one *)
-    );
-    let node_ref = traverse y in
-    node_ref_mut := node_ref;
-    print_string ">>>> traversing indirection atom <<<<\n";
-    node_ref
-  | VMAtom (_, _) -> node_ref
-		       
-       
 let check_arg local_indegs env node_ref_mut =
   (* traverse indirection atoms till reach a symbol atom *)
   let node_ref = traverse node_ref_mut in 
