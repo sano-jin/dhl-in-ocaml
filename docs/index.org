@@ -62,8 +62,8 @@
   #+end_src
 
 ** Dependencies
-   [[/src/output.svg][dependency]]
-   [[src/output.svg]]
+   [[../src/output.svg][dependency]]
+   [[../src/output.svg]]
    
    
 ** Source programs
