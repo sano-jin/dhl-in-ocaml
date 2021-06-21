@@ -72,18 +72,11 @@ let collect_redir = function
   | _ -> None
 
 let collect_redirs = List.filter_map collect_redir
-				     
-(*				     
-let print_int_pair_list l =
-  print_string @@ "[" ^ String.concat "; " (List.map (fun (k, v) -> "(" ^ string_of_int k ^ ", " ^ string_of_int v ^ ")") l) ^ "]\n"
- *)
-				     
+				     				     
 let rec breakdown proc =
   let link_id, (atoms, rules) = alpha proc in
   let (local_indegs, free_indegs), free_names = collect_link_info atoms in
-  (* print_int_pair_list local_indegs; *)
   let local_indegs, inds = breakdown_inds (link_id, local_indegs) atoms in
-  (* print_int_pair_list local_indegs; *)
   (((local_indegs, free_indegs), free_names), inds), List.map breakdown_rule rules
 and breakdown_rule (lhs, rhs) =
   let rule = (breakdown lhs, breakdown rhs) in

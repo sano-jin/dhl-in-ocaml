@@ -54,5 +54,6 @@ let rec alpha_proc env link_id = function
 
 (** Convert local link names to fresh ids and partition atoms and rules *)     
 let alpha = second partitionEithers <. alpha_proc [] 0
+	      
 
 

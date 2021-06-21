@@ -10,3 +10,8 @@ R -> append(cons(H, T), L)
 % append_nil @@
 R -> append(nil, L)
 :- R -> L.
+
+% 
+% % cons @@
+% R -> cons(H, T)
+% :- R -> c(H, T).

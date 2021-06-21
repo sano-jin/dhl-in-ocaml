@@ -17,8 +17,8 @@ let rec dbg_dump_ref addr2link node_ref =
        x
     | Some s -> s
 and dbg_dump_atom addr2link = function  
-  | VMAtom (p, xs) -> p ^ " (" ^ String.concat ", " (List.map (dbg_dump_ref addr2link) xs) ^ ")"
-  | VMInd x -> dbg_dump_ref addr2link x
+  | VMAtom (p, xs) -> p ^ " (" ^ String.concat ", " (List.map (dbg_dump_ref addr2link <. (!)) xs) ^ ")"
+  | VMInd x -> dbg_dump_ref addr2link !x
 
 let dbg_dump_ind addr2link (x, node_ref) =
   let (indeg, atom) = !node_ref in

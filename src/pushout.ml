@@ -9,8 +9,8 @@ let push_arg (local2addr, free2addr) =
     match List.assoc_opt x link2addr with
     | None ->
        let node_ref = ref (0, VMAtom ("Null", [])) in
-       ((x, node_ref)::link2addr, node_ref)
-    | Some node_ref -> (link2addr, node_ref)
+       ((x, node_ref)::link2addr, ref node_ref)
+    | Some node_ref -> (link2addr, ref node_ref)
   in
   function
   | BFreeLink x ->
@@ -39,7 +39,10 @@ let push_atom (local_indegs, free_indegs) link2addrs =
      if List.assoc x free_indegs = 0 then link2addrs
      else	  
        let ((local2addr, free2addr), y) = push_arg link2addrs @@ BFreeLink y in
-       (local2addr, get_atom (x, VMInd y) free_indegs free2addr)
+       if List.assoc x free_indegs = 0
+       then (* if the indegree of the (possibly generated) indirection, do nothing *)
+	 (local2addr, free2addr)
+       else (local2addr, get_atom (x, VMInd y) free_indegs free2addr)
 
 let push_atoms (local_indegs, free_indegs) free_addr2indeg free2addrs inds =
   let free_indegs =
@@ -47,6 +50,9 @@ let push_atoms (local_indegs, free_indegs) free_addr2indeg free2addrs inds =
     @@ fun (x, indeg) ->
        (x, List.assoc (List.assoc x free2addrs) free_addr2indeg + indeg)
   in
-  List.map snd @@ fst
-  @@ List.fold_left (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds
-		    
+  let generated_atoms = 
+    List.map snd @@ fst
+    @@ List.fold_left (push_atom (local_indegs, free_indegs)) ([], free2addrs) inds
+  in
+  (* print_string @@ "generated atoms are ...\n" ^ Debug_vm.dbg_dump generated_atoms ^ "\n"; *)
+  generated_atoms 
