@@ -1,4 +1,5 @@
-#+title: A minimal interpreter of a language based on graph rewriting
+#+title: DHL in OCaml
+#+subtitle: A minimal interpreter of a language based on graph rewriting
 #+author: Jin SANO
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 #+OPTIONS: ^:nil
@@ -6,6 +7,27 @@
 * About
   A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 
+** Getting Started
+*** Prerequisites
+    - [[https://opam.ocaml.org/][opam]]
+
+*** Installation
+  #+NAME: Installation
+  #+BEGIN_SRC sh
+    git clone https://github.com/sano-jin/dhl-in-ocaml
+    cd dhl-in-ocaml
+    opam install .
+    dune build
+  #+END_SRC
+
+** Usage
+
+  #+NAME: Usage
+  #+BEGIN_SRC sh
+    dune exec dhl -- example/append.dhl
+  #+END_SRC
+
+   
   
 * 実装の概要
 
@@ -39,8 +61,34 @@
   -------------------------------------------------------------------------------
   #+end_src
 
+** Source programs
+
+*** Utility functions 
+   - util.ml		:: Some utility functions
+
+*** Compiler
+
+**** Lexical/Syntax analysis
+     - syntax.ml	:: The abstract syntax definition
+     - lexer.mll	:: Defines a token for lexing
+     - parser.mly 	:: Defines a grammar for parsing
+
+**** Semantic analysis
+     - alpha.ml		:: Convert local link names to fresh ids and partition atoms and rules
+     - link_check.ml	:: Collect link information and check them
+     - breakdown.ml	:: Check rule conditions and break down atoms
+
+*** VM
+    - vm.ml		:: Type definition of an atom and pretty printer for its multi-set
+    - match.m		:: Perform graph pattern matching
+    - pushout.ml	:: Generate and push atoms
+    - eval.ml		:: The one step reducer
+
+*** Repl
+    - main.ml		:: File loader and the main execution loop
+
   
-  
+    
 * アトムのメモリ管理に関して
   性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
   （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
