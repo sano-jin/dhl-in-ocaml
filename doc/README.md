@@ -1,2 +1,4 @@
-# A POC of Directed HyperLMNtal
+# dhl-in-ocaml
+
+See [index.html](indeg.html)
 
