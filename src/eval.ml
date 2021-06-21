@@ -4,20 +4,13 @@ open Breakdown
 open Util
 open Vm
        
-(** Free memory fragment of the given address.
-    Possibly implemented with `option` type and assign `None`.
- *)
-let remove_atom node_ref =
-  match !node_ref with
-  | (indeg, VMAtom (p, xs)) -> node_ref := (indeg, VMAtom ("~" ^ p, xs))
-  | (indeg, VMInd x) -> node_ref := (indeg, VMAtom ("~->", [x]))
-
 (** Try to reduce one step with the given atoms and a rule *)				      
-let reduce atom_list (BRule (((lhs_indegs, _), lhs_atoms), (((rhs_indegs, _), rhs_atoms), _), _)) =
+let reduce atom_list (BRule (((lhs_indegs, _), lhs_atoms), (((rhs_indegs, _), rhs_atoms), _), redirs)) =
   let+ env = Match.match_ () lhs_indegs atom_list lhs_atoms in
   let local_addrs = List.map snd env.local2addr in
-  let atom_list = set_minus_q atom_list local_addrs in
-  List.iter remove_atom local_addrs;
+  let redirected_addrs = List.map (flip List.assoc env.free2addr) @@ List.map fst redirs in
+  let atom_list = set_minus_q atom_list @@ local_addrs@redirected_addrs in
+  List.iter free_atom local_addrs;
   Pushout.push_atoms rhs_indegs env.free_addr2indeg env.free2addr rhs_atoms @ atom_list
 
 (** Try reduce one step with the given atoms and rules *)

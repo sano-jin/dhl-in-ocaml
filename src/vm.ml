@@ -3,8 +3,8 @@
 open Util
        
 type vm_atom =
-  | VMAtom of string * node_ref list
-  | VMInd of node_ref
+  | VMAtom of string * node_ref ref list
+  | VMInd of node_ref ref
  and node_ref = (int * vm_atom) ref  (** (indeg, atom) *)
 
 let get_link_name ((ref2link_id, link_id) as env) node_ref =
@@ -29,11 +29,11 @@ and dump_atom is_top_level ((dumped_nodes, addr_env) as env) node_ref =
       *	then we should remember that we have dumped that indirection.
       *	Otherwise, we will just print the link to indirect. *)
      if is_top_level then
-       first (pair @@ node_ref::dumped_nodes) @@ get_link_name addr_env y
+       first (pair @@ node_ref::dumped_nodes) @@ get_link_name addr_env !y
      else
        first (pair dumped_nodes) @@ get_link_name addr_env node_ref
   | VMAtom (p, xs) ->
-     let (env, xs) = List.fold_left_map dump_arg (first (List.cons node_ref) env) xs in
+     let (env, xs) = List.fold_left_map dump_arg (first (List.cons node_ref) env) @@ List.map (!) xs in
      (env, p ^ if xs = [] then ""
 	       else "(" ^ String.concat ", " xs ^ ")")
      
@@ -59,12 +59,12 @@ let rec visit (l, visited) node_ref =
       | VMInd y -> [y]
     in
     first (List.cons node_ref)
-    @@ List.fold_left visit (l, visited) xs 
+    @@ List.fold_left visit (l, visited) @@ List.map (!) xs 
 
 (** Topological sort *)
 let tpl_sort = fst <. List.fold_left visit ([], []) 
 
-(** Pretty printer for printing nodes *)				     
+(** Pretty printer for printing nodes *)
 let dump =
   String.concat ". "
   <. List.filter_map id <. snd <. List.fold_left_map dump_ind ([], ([], 0)) 
@@ -73,7 +73,8 @@ let dump =
 
 (** An environment for matching and pushout *)
 type env = {
-  local_addrs: node_ref list;
+  (*  local_addrs: node_ref list; *)
+  matched_atoms: node_ref list;
   (** all the addresses of the matched atoms on lhs. 
       possibly not indirected from a local link ? *)
   
@@ -83,5 +84,38 @@ type env = {
 }
 
 let empty_env =
-  {local_addrs = []; local2addr = []; free2addr = []; free_addr2indeg = []}	     
+  {matched_atoms = []; local2addr = []; free2addr = []; free_addr2indeg = []}	     
 
+
+    
+(** Free memory fragment of the given address.
+    Possibly implemented with `option` type and assign `None`.
+ *)
+let free_atom node_ref =
+  match !node_ref with
+  | (indeg, VMAtom (p, xs)) -> node_ref := (indeg, VMAtom ("~" ^ p, xs))
+  | (indeg, VMInd x) -> node_ref := (indeg, VMAtom ("~->", [x]))
+
+
+(*
+(***********)
+(* Delete indirection atoms on atom list *)
+let is_not_indir node_ref =
+  match snd !node_ref with
+  | VMInd _ -> false
+  | VMAtom _ -> true
+
+let rec traverse node_ref_mut traversed_indirection =
+  let node_ref = !node_ref_mut in
+  let indeg = fst !node_ref in
+  match snd !node_ref with
+  | VMInd y as vm_ind ->
+    ( if indeg = 1 then free_atom node_ref (* Free if only I am pointing *)
+      else node_ref := (pred indeg, vm_ind) (* Else decrease the indegree by one *)
+    );
+    let node_ref = traverse y in
+    node_ref_mut := node_ref;
+    node_ref
+  | VMAtom (_, _) -> node_ref
+		  
+ *)

@@ -4,7 +4,29 @@ open Breakdown
 open Util
 open Vm
 
-let check_arg local_indegs env node_ref =
+
+(** Traverse indirection atoms and returns the pointed atom.
+    There is no worring of circulating indirection
+    (if that exists, then the basic design is wrong).
+ *)
+let rec traverse node_ref_mut =
+  let node_ref = !node_ref_mut in
+  let indeg = fst !node_ref in
+  match snd !node_ref with
+  | VMInd y as vm_ind ->
+    ( if indeg = 1 then free_atom node_ref (* Free if only I am pointing *)
+      else node_ref := (pred indeg, vm_ind) (* Else decrease the indegree by one *)
+    );
+    let node_ref = traverse y in
+    node_ref_mut := node_ref;
+    print_string ">>>> traversing indirection atom <<<<\n";
+    node_ref
+  | VMAtom (_, _) -> node_ref
+		       
+       
+let check_arg local_indegs env node_ref_mut =
+  (* traverse indirection atoms till reach a symbol atom *)
+  let node_ref = traverse node_ref_mut in 
   function
   | BFreeLink x ->
        begin
@@ -32,26 +54,18 @@ let check_arg local_indegs env node_ref =
 
 			      
 let check_atom local_indegs indeg_pred (p, xs) env node_ref =
-  let rec traverse node_ref =
-    if List.memq node_ref env.local_addrs then None (* already matched addr   *)
-    else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match  *)
-    else match snd !node_ref with
-	 | VMInd next ->
-	    
-	    (* not working. must perform fusion  *)
-	    (* node_ref := !next; (* path compression *) *)
-	    
-	    traverse next
-		     
-	 | VMAtom (q, ys) ->
-	    if p <> q then None (* different atom name  *)
-	    else zip ys xs
-		 >>= foldM (uncurry <. check_arg local_indegs)
-			   {env with local_addrs = node_ref::env.local_addrs}
-  in traverse node_ref
+  if List.memq node_ref env.matched_atoms then None (* already matched addr   *)
+  else if not @@ indeg_pred @@ fst !node_ref then None (* indeg did not match  *)
+  else match snd !node_ref with
+       | VMInd _ -> failwith @@ "Bug: we should not dereference indirection from an atom list"
+       | VMAtom (q, ys) ->
+	  if p <> q then None (* different atom name  *)
+	  else zip ys xs
+	       >>= foldM (uncurry <. check_arg local_indegs)
+			 {env with matched_atoms = node_ref::env.matched_atoms}
 
 	      
-	      
+(* node_ref must be pointing at a VMAtom not VMInd *)
 let check_ind local_indegs env node_ref = function
   | BLocalInd (x, (p, xs)) ->
      check_atom
@@ -83,15 +97,20 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
   let check_ind_ = flip @@ check_ind local_indegs env in
   let try_deref x link2addr ind t =
     match List.assoc_opt x link2addr with
-    | None ->
+    | None -> (* Could not dereference. has not matched yet. *)
        let rec try_match = function
 	 | [] -> None (* no atom list remaining *)
-	 | node_ref::node_refs ->
+	 | node_ref::rest_atom_list ->
+	    (* node_ref must be pointing a VMAtom (not VMInd) *)
 	    ( let* env = check_ind_ ind node_ref in
 	      find_atoms env redirs indegs atom_list t
-	    ) <|> fun _ -> try_match node_refs
+	    ) <|> fun _ -> try_match rest_atom_list
        in try_match atom_list
     | Some node_ref ->
+       (* Was able to dereference with already known reference.
+	  In this case, the node_ref is guaranteeded to point an atom but an indirection atom.
+	  Since we have traversed indirection in the formaer process.
+	*)
        let* env = check_ind_ ind node_ref in
        find_atoms env redirs indegs atom_list t
   in	 

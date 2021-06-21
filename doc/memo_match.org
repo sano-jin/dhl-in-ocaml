@@ -1,0 +1,78 @@
+#+title: A minimal interpreter of a language based on graph rewriting
+#+author: Jin SANO
+
+* About
+  A minimal implementation of a graph rewriting language Directed HyperLMNtal.
+
+* Match
+  - Indirection アトムはアトムリストに登録しない
+  
+  - シンボルアトムの持つべき情報
+    - アトム名
+    - 引数のリンク（ポインタ）を m 本
+    - 他のアトムからの被参照数
+      - アトムリストからの参照はカウントしない
+      - アトムリストからは常に辿れるはず（べき）なので
+    - Indirection アトムの持つべき情報（再考）
+      - 引数のリンクを一本（ポインタ）
+      - 他のアトムからの被参照数
+	- 他のアトムやアトムリストが（他のアトムを参照しようとして間接的に）参照している場合は，
+	  この Indirection アトムは消去できない
+	- ウソ？：アトムリストからの被参照数は常にゼロなのでカウントしない
+	  
+	  
+  - トラバースに関して
+    - アトムリストの参照から辿り始めた場合
+      - シンボルアトムを dereference した場合
+      - Indirection アトムを dereference した場合
+	- このまま dereference を続けてマッチングを行ったりはしない
+	  - Indirect されたアトムはアトムリストの別の場所に登録されているはずなので
+	- Indirection を辿って（可能なら）Indirection アトムのメモリ領域の解放とアトムリストからの参照の除去を行う
+	- ループしうる
+    - アトムの引数のリンク（ポインタ）から辿り始めた場合
+      - 参照先がシンボルアトムなら普通にマッチする
+      - 参照先が Indirection アトムだったらその先を辿る
+	- Indirection アトムの被参照数を1減らす
+	  - アトムの引数からの参照の分
+	  - これで Indirection アトムの被参照数がゼロになったらメモリを解放
+	- Indirection アトムを辿っているうちに普通のアトムに辿り着いたら
+	  - そのアトムへの参照で元のアトムの引数を更新する
+	- Indirection アトムを辿っているうちに自分自身に辿り着くということはあるか？
+	  （Indirection のみでループしうるか？）
+	  - 設計が正しければ，そんなことは起きない
+	  - アトムの引数からは必ずアトムが一つ辿れるはずなので
+	
+      
+  
+* Implementation
+  
+** Syntax
+  #+NAME: Syntax of Directed HyperLMNtal
+  #+begin_src ocaml
+    (* argument of an atom *)
+    type arg =
+      | Atom of string * arg list  (* atom. e.g. a(X, Y) *)
+      | Link of string             (* link. e.g. X *)
+
+    (* process *)
+    type proc = 
+      | Zero
+      | Ind of string option * arg  (* indirection. e.g. X -> a(Y) *)
+      | Mol of proc * proc          (* molecule. e.g. (P, Q) *)  
+      | New of string * proc        (* link creation. e.g. \X.P *)
+      | Rule of proc * proc         (* rule. e.g. P :- Q. *)
+  #+end_src
+
+** VM
+  #+begin_src ocaml
+    (* node *)
+    type vm_atom =
+      | VMAtom of string * node_ref list
+      | VMInd of node_ref
+     and node_ref = (int * vm_atom) ref  (* (indeg, atom) *)
+  #+end_src
+  
+  
+  
+
+  

@@ -75,7 +75,8 @@ let rec update_assc_opt pred f fallback = function
      else h <::> update_assc_opt pred f fallback t
 
 let update_ref f r = r := f !r
-
+let (!++) r = let i = !r in incr r; i
+			    
 let safe_minus x y =
   if x < y then None else Some (x - y)
 
