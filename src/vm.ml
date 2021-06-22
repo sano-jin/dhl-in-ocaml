@@ -49,7 +49,10 @@ let dump_ind ((dumped_nodes, addr_env) as env) node_ref =
 	second ((^) @@ link ^ " -> ") @@ dump_atom true env node_ref 
 
 
-(** A helper function for `tpl_sort` *)  
+(** A helper function for `tpl_sort` 
+    Notice this function will also return indirections that are not in the atom_list
+    but traversable from it.
+*)  
 let rec visit (l, visited) node_ref =
   if List.memq node_ref visited then (l, visited)
   else
@@ -117,7 +120,9 @@ let rec traverse node_ref_mut =
 
 
 		       
-(** resolve indirections in an atom list *)
+(** Resolve indirections in an atom list
+    Supposed to be called in the end of the program execution.
+ *)
 let clean_atom_list atom_list =
   let clean_atom node_ref =
     match snd !node_ref with

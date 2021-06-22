@@ -4,5 +4,5 @@
 (ocamllex lexer)
 
 (library
- (name dhl)
+ (name main)
  (public_name dhl))
