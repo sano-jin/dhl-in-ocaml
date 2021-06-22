@@ -4,6 +4,7 @@
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 #+OPTIONS: ^:nil
 
+
 * About
   A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 
@@ -17,17 +18,26 @@
     git clone https://github.com/sano-jin/dhl-in-ocaml
     cd dhl-in-ocaml
     opam install .
-    dune build
+    opam exec -- dune build
   #+END_SRC
 
 ** Usage
 
   #+NAME: Usage
-  #+BEGIN_SRC sh
-    dune exec dhl -- example/append.dhl
+  #+BEGIN_SRC sh :dir ../ :exports both :results code
+    opam exec -- dune exec dhl -- example/append.dhl
   #+END_SRC
 
-   
+  #+RESULTS: Usage
+  #+begin_src sh
+  0: append(cons(a, cons(b, nil)), cons(c, nil))
+  1: cons(a, append(cons(b, nil), cons(c, nil)))
+  2: cons(a, cons(b, append(nil, cons(c, nil))))
+  3: cons(a, cons(b, L0)). L0 -> L1. L1 -> cons(c, nil)
+  Final state: cons(a, cons(b, cons(c, nil)))
+  #+end_src
+
+  
   
 * 実装の概要
 
@@ -36,37 +46,41 @@
 
 ** LOC
   #+NAME: directory
-  #+BEGIN_SRC sh :exports results :results code
-    cd ../src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
+  #+BEGIN_SRC sh :exports results :results code :dir ../
+    cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
   #+END_SRC
+
   #+RESULTS[a6c9a9dcab97dbc67780bcf26c773228d0a3b568]: directory
   #+begin_src sh
-  -------------------------------------------------------------------------------
   File                             blank        comment           code
   -------------------------------------------------------------------------------
   match.ml                            15             20             86
-  vm.ml                               22             28             81
-  util.ml                             25              2             60
   parser.mly                          20             12             59
+  util.ml                             23              2             58
   pushout.ml                           4              2             52
   breakdown.ml                        18             18             51
+  dump.ml                             10             13             48
   link_check.ml                       16             11             39
   main.ml                              7              7             39
   alpha.ml                            14             11             34
   lexer.mll                           10              8             34
+  vm.ml                               14             16             34
   eval.ml                              5              4             13
   syntax.ml                            2              3              9
   -------------------------------------------------------------------------------
-  SUM:                               158            126            557
+  SUM:                               158            127            556
   -------------------------------------------------------------------------------
   #+end_src
+
 
 ** Dependencies
 
    #+name: dependencies
-   #+begin_src sh
-   python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
+   #+begin_src sh :dir ../ :exports none
+     python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
    #+end_src
+   
+   #+RESULTS: dependencies
    
    [[./output.svg]]
 
@@ -160,10 +174,87 @@
    
 
 
-* Vm.dump に関して
+* テスト用の Dumper
+
+  =-dbg= オプションをつけると，アトムリストをダンプする
+
+  - アトムリスト上に存在するアトムは 0 から連続する整数のアドレスをふって表示する
+    - 全てシンボルアトムであるべき
+      （Indirection アトムはアトムリストに登録しない）
+  - アトムリストにないアトムは負数のアドレスを振って表示する
+    - 全て Indirection アトムであるべき
+      （シンボルアトムは必ずアトムリストに登録されているべきなので）
+    
+  
+  #+NAME: Execution with -dbg option
+  #+BEGIN_SRC sh :dir ../ :exports both :results code
+    opam exec -- dune exec dhl -- example/append.dhl -dbg
+  #+END_SRC
+
+  #+RESULTS: Execution with -dbg option
+  #+begin_src sh
+  0: 
+  #0 -> 1 : nil []
+  #1 -> 1 : c []
+  #2 -> 1 : nil []
+  #3 -> 1 : b []
+  #4 -> 1 : cons [#3, #2]
+  #5 -> 1 : a []
+  #6 -> 0 : append [#8, #7]
+  #7 -> 1 : cons [#1, #0]
+  #8 -> 1 : cons [#5, #4]
+
+  1: 
+  #0 -> 1 : append [#5, #8]
+  #1 -> 1 : nil []
+  #2 -> 1 : c []
+  #3 -> 1 : nil []
+  #4 -> 1 : b []
+  #5 -> 1 : cons [#4, #3]
+  #6 -> 1 : a []
+  #7 -> 0 : cons [#6, #0]
+  #8 -> 1 : cons [#2, #1]
+
+  2: 
+  #0 -> 1 : append [#4, #8]
+  #1 -> 1 : cons [#5, #0]
+  #2 -> 1 : nil []
+  #3 -> 1 : c []
+  #4 -> 1 : nil []
+  #5 -> 1 : b []
+  #6 -> 1 : a []
+  #7 -> 0 : cons [#6, #1]
+  #8 -> 1 : cons [#3, #2]
+
+  3: 
+  #-1 -> 1 : -> [#6]
+  #0 -> 1 : cons [#3, #-1]
+  #1 -> 1 : nil []
+  #2 -> 1 : c []
+  #3 -> 1 : b []
+  #4 -> 1 : a []
+  #5 -> 0 : cons [#4, #0]
+  #6 -> 1 : cons [#2, #1]
+
+  Final state: 
+  #0 -> 1 : cons [#3, #6]
+  #1 -> 1 : nil []
+  #2 -> 1 : c []
+  #3 -> 1 : b []
+  #4 -> 1 : a []
+  #5 -> 0 : cons [#4, #0]
+  #6 -> 1 : cons [#2, #1]
+
+  #+end_src
+
+
+  
+* Dump.dump に関して
 
   トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
   Indirection アトムも明示的に dump するようになっている
 
   今はデバッグに便利そうだから放っておいているが，
   あとで Indirection アトムは隠蔽するように変更しても良いかもしれない
+
+  

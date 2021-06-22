@@ -33,7 +33,7 @@ let run_file dumper file_name  =
   | ((((local_indegs, []), []), inds), rules) ->
      let final_state = run_many dumper 0 rules @@ Eval.init_atoms local_indegs inds in
      Vm.clean_atom_list final_state;
-     print_string @@ "Final state: " ^ dumper final_state ^ "\n"
+     print_endline @@ "Final state: " ^ dumper final_state
   | _ -> failwith "free links are not allowed in the initial graph"
 
 let valid_options = ["-dbg"]
@@ -49,5 +49,5 @@ let main () =
      | [] ->
 	let dumper = 
 	  if List.mem "-dbg" options then Debug_vm.dbg_dump
-	  else Vm.dump
+	  else Dump.dump
 	in run_file dumper file_name
