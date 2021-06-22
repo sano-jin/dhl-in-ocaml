@@ -13,29 +13,32 @@
     - [[https://opam.ocaml.org/][opam]]
 
 *** Installation
-  #+NAME: Installation
-  #+BEGIN_SRC sh
-    git clone https://github.com/sano-jin/dhl-in-ocaml
-    cd dhl-in-ocaml
-    opam install .
-    opam exec -- dune build
-  #+END_SRC
+    #+NAME: Installation
+    #+BEGIN_SRC sh
+      git clone https://github.com/sano-jin/dhl-in-ocaml
+      cd dhl-in-ocaml
+      opam install .
+      opam exec -- dune build
+    #+END_SRC
 
 ** Usage
 
-  #+NAME: Usage
-  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-    opam exec -- dune exec dhl -- example/append.dhl
-  #+END_SRC
+   example/append.dhl  
+   #+include: ../example/append.dhl example
+   
+   #+NAME: Usage
+   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
+     opam exec -- dune exec dhl -- example/append.dhl
+   #+END_SRC
 
-  #+RESULTS[e0c57b8f070978062c17c899b19171f1a61edb52]: Usage
-  #+begin_src sh
-  0: append(cons(a, cons(b, nil)), cons(c, nil))
-  1: cons(a, append(cons(b, nil), cons(c, nil)))
-  2: cons(a, cons(b, append(nil, cons(c, nil))))
-  3: cons(a, cons(b, L0)). L0 -> L1. L1 -> cons(c, nil)
-  Final state: cons(a, cons(b, cons(c, nil)))
-  #+end_src
+   #+RESULTS[e0c57b8f070978062c17c899b19171f1a61edb52]: Usage
+   #+begin_src sh
+     0: append(cons(a, cons(b, nil)), cons(c, nil))
+     1: cons(a, append(cons(b, nil), cons(c, nil)))
+     2: cons(a, cons(b, append(nil, cons(c, nil))))
+     3: cons(a, cons(b, L0)). L0 -> L1. L1 -> cons(c, nil)
+     Final state: cons(a, cons(b, cons(c, nil)))
+   #+end_src
 
   
 
@@ -44,32 +47,32 @@
   （ことを目指している）
   
 ** LOC
-  #+NAME: directory
-  #+BEGIN_SRC sh :exports results :results code :cache yes :dir ../ 
-    cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
-  #+END_SRC
+   #+NAME: directory
+   #+BEGIN_SRC sh :exports results :results code :cache yes :dir ../ 
+     cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
+   #+END_SRC
 
-  #+RESULTS[7e2b07c6dea30eca900b78fc802cb319d86aca97]: directory
-  #+begin_src sh
-  File                             blank        comment           code
-  -------------------------------------------------------------------------------
-  match.ml                            16             20             93
-  util.ml                             24              3             63
-  parser.mly                          20             12             59
-  breakdown.ml                        19             19             55
-  pushout.ml                           6              2             51
-  dump.ml                             10             13             48
-  link_check.ml                       16             11             39
-  main.ml                              7              7             39
-  alpha.ml                            14             11             34
-  lexer.mll                           10              8             34
-  vm.ml                               14             16             34
-  eval.ml                              5              5             13
-  syntax.ml                            2              3              9
-  -------------------------------------------------------------------------------
-  SUM:                               163            130            571
-  -------------------------------------------------------------------------------
-  #+end_src
+   #+RESULTS[7e2b07c6dea30eca900b78fc802cb319d86aca97]: directory
+   #+begin_src sh
+     File                             blank        comment           code
+     -------------------------------------------------------------------------------
+     match.ml                            16             20             93
+     util.ml                             24              3             63
+     parser.mly                          20             12             59
+     breakdown.ml                        19             19             55
+     pushout.ml                           6              2             51
+     dump.ml                             10             13             48
+     link_check.ml                       16             11             39
+     main.ml                              7              7             39
+     alpha.ml                            14             11             34
+     lexer.mll                           10              8             34
+     vm.ml                               14             16             34
+     eval.ml                              5              5             13
+     syntax.ml                            2              3              9
+     -------------------------------------------------------------------------------
+     SUM:                               163            130            571
+     -------------------------------------------------------------------------------
+   #+end_src
 
 ** Dependencies
 
@@ -87,7 +90,7 @@
    
    
 *** Utility functions 
-   - util.ml		:: Some utility functions
+    - util.ml		:: Some utility functions
 
 *** Compiler
 
@@ -180,37 +183,42 @@
     - 他からまだ参照されうる場合
 
 ** Dactl との違い
-  Dactl ではそもそも，リダイレクションを行う自由リンクが非単射的マッチングを行うことを許していない
-  （と思われる）
+   Dactl ではそもそも，リダイレクションを行う自由リンクが非単射的マッチングを行うことを許していない
+   （と思われる）
 
 **  プログラム例
 
-  #+NAME: Invalid redirection
-  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-    cat example/test3.dhl && echo "------"
-    opam exec -- dune exec dhl -- example/test3.dhl
-  #+END_SRC
+   #+include: ../example/test3.dhl example
 
-  #+RESULTS[e45ffe86b5bb6a02e9722edea000f6601d5990a5]: Invalid redirection
-  #+begin_src sh
-  \X.( 
-    X -> a(X), b(X)
-  ).
+   #+NAME: Invalid redirection
+   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
+     opam exec -- dune exec dhl -- example/test3.dhl
+   #+END_SRC
 
-  X -> a(Y) :- X -> Y.
-  0: b(L0). L0 -> a(L0)
-  Final state: b(L0). L0 -> a(L0)
-  #+end_src
-
-  これは遷移しない
   
-  ただし，これは遷移する（Dactl だと遷移しない）
+   #+RESULTS[26d99a4eded1fb5285063906fce06f4f3875aec9]: Invalid redirection
+   #+begin_src sh
+   0: b(L0). L0 -> a(L0)
+   Final state: b(L0). L0 -> a(L0)
+   #+end_src
+
+   これは遷移しない
   
-  #+NAME: Valid redirection
-  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-    cat example/test4.dhl && echo "------"
-    opam exec -- dune exec dhl -- example/test4.dhl
-  #+END_SRC  
+   ただし，これは遷移する（Dactl だと遷移しない）
+
+   #+include: ../example/test4.dhl example
+  
+   #+NAME: Valid redirection
+   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
+     opam exec -- dune exec dhl -- example/test4.dhl
+   #+END_SRC  
+
+   #+RESULTS[90e3444d4a164f0271997fe477741db0b16894d6]: Valid redirection
+   #+begin_src sh
+   0: L0 -> a(L0)
+   1: 
+   Final state: 
+   #+end_src
   
 
 * デバッグ用の Dumper
@@ -232,57 +240,57 @@
 
   #+RESULTS[4fb386425d289537dd91897a3a55006a5780f44e]: Execution with -dbg option
   #+begin_src sh
-  0: 
-  #0 -> 1 : nil []
-  #1 -> 1 : c []
-  #2 -> 1 : nil []
-  #3 -> 1 : b []
-  #4 -> 1 : cons [#3, #2]
-  #5 -> 1 : a []
-  #6 -> 0 : append [#8, #7]
-  #7 -> 1 : cons [#1, #0]
-  #8 -> 1 : cons [#5, #4]
+    0: 
+    #0 -> 1 : nil []
+    #1 -> 1 : c []
+    #2 -> 1 : nil []
+    #3 -> 1 : b []
+    #4 -> 1 : cons [#3, #2]
+    #5 -> 1 : a []
+    #6 -> 0 : append [#8, #7]
+    #7 -> 1 : cons [#1, #0]
+    #8 -> 1 : cons [#5, #4]
 
-  1: 
-  #0 -> 1 : append [#5, #8]
-  #1 -> 1 : nil []
-  #2 -> 1 : c []
-  #3 -> 1 : nil []
-  #4 -> 1 : b []
-  #5 -> 1 : cons [#4, #3]
-  #6 -> 1 : a []
-  #7 -> 0 : cons [#6, #0]
-  #8 -> 1 : cons [#2, #1]
+    1: 
+    #0 -> 1 : append [#5, #8]
+    #1 -> 1 : nil []
+    #2 -> 1 : c []
+    #3 -> 1 : nil []
+    #4 -> 1 : b []
+    #5 -> 1 : cons [#4, #3]
+    #6 -> 1 : a []
+    #7 -> 0 : cons [#6, #0]
+    #8 -> 1 : cons [#2, #1]
 
-  2: 
-  #0 -> 1 : append [#4, #8]
-  #1 -> 1 : cons [#5, #0]
-  #2 -> 1 : nil []
-  #3 -> 1 : c []
-  #4 -> 1 : nil []
-  #5 -> 1 : b []
-  #6 -> 1 : a []
-  #7 -> 0 : cons [#6, #1]
-  #8 -> 1 : cons [#3, #2]
+    2: 
+    #0 -> 1 : append [#4, #8]
+    #1 -> 1 : cons [#5, #0]
+    #2 -> 1 : nil []
+    #3 -> 1 : c []
+    #4 -> 1 : nil []
+    #5 -> 1 : b []
+    #6 -> 1 : a []
+    #7 -> 0 : cons [#6, #1]
+    #8 -> 1 : cons [#3, #2]
 
-  3: 
-  #-1 -> 1 : -> [#6]
-  #0 -> 1 : cons [#3, #-1]
-  #1 -> 1 : nil []
-  #2 -> 1 : c []
-  #3 -> 1 : b []
-  #4 -> 1 : a []
-  #5 -> 0 : cons [#4, #0]
-  #6 -> 1 : cons [#2, #1]
+    3: 
+    #-1 -> 1 : -> [#6]
+    #0 -> 1 : cons [#3, #-1]
+    #1 -> 1 : nil []
+    #2 -> 1 : c []
+    #3 -> 1 : b []
+    #4 -> 1 : a []
+    #5 -> 0 : cons [#4, #0]
+    #6 -> 1 : cons [#2, #1]
 
-  Final state: 
-  #0 -> 1 : cons [#3, #6]
-  #1 -> 1 : nil []
-  #2 -> 1 : c []
-  #3 -> 1 : b []
-  #4 -> 1 : a []
-  #5 -> 0 : cons [#4, #0]
-  #6 -> 1 : cons [#2, #1]
+    Final state: 
+    #0 -> 1 : cons [#3, #6]
+    #1 -> 1 : nil []
+    #2 -> 1 : c []
+    #3 -> 1 : b []
+    #4 -> 1 : a []
+    #5 -> 0 : cons [#4, #0]
+    #6 -> 1 : cons [#2, #1]
 
   #+end_src
 
