@@ -40,7 +40,7 @@ let push_atom (local_indegs, free_indegs) link2addrs =
      else	  
        let ((local2addr, free2addr), y) = push_arg link2addrs @@ BFreeLink y in
        if List.assoc x free_indegs = 0
-       then (* if the indegree of the (possibly generated) indirection, do nothing *)
+       then (* if the indegree of the (possibly generated) indirection is zero, do nothing *)
 	 (local2addr, free2addr)
        else (local2addr, get_atom (x, VMInd y) free_indegs free2addr)
 

@@ -36,7 +36,7 @@
 
 ** LOC
   #+NAME: directory
-  #+BEGIN_SRC sh :cache yes :exports results :results code
+  #+BEGIN_SRC sh :exports results :results code
     cd ../src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
   #+END_SRC
   #+RESULTS[a6c9a9dcab97dbc67780bcf26c773228d0a3b568]: directory
@@ -45,28 +45,33 @@
   File                             blank        comment           code
   -------------------------------------------------------------------------------
   match.ml                            15             20             86
-  vm.ml                               22             23             81
+  vm.ml                               22             28             81
   util.ml                             25              2             60
   parser.mly                          20             12             59
   pushout.ml                           4              2             52
   breakdown.ml                        18             18             51
-  dhl.ml                               7              7             39
   link_check.ml                       16             11             39
+  main.ml                              7              7             39
   alpha.ml                            14             11             34
   lexer.mll                           10              8             34
   eval.ml                              5              4             13
   syntax.ml                            2              3              9
   -------------------------------------------------------------------------------
-  SUM:                               158            121            557
+  SUM:                               158            126            557
   -------------------------------------------------------------------------------
   #+end_src
 
 ** Dependencies
-   [[../src/output.svg][dependency]]
-   [[../src/output.svg]]
+
+   #+name: dependencies
+   #+begin_src sh
+   python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
+   #+end_src
    
-   
-** Source programs
+   [[./output.svg]]
+
+
+** プログラムの簡単な解説
 
    
    
@@ -94,8 +99,8 @@
 *** Repl
     - main.ml		:: File loader and the main execution loop
 
-  
-    
+      
+
 * アトムのメモリ管理に関して
   性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
   （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
@@ -153,3 +158,12 @@
        の和よりも大きくなることはない
        - つまり，参照カウンタの値がゼロになったら破棄して良い（それ以外に参照しているものはいないことが保証される）
    
+
+
+* Vm.dump に関して
+
+  トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
+  Indirection アトムも明示的に dump するようになっている
+
+  今はデバッグに便利そうだから放っておいているが，
+  あとで Indirection アトムは隠蔽するように変更しても良いかもしれない

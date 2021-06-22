@@ -11,13 +11,13 @@ let rec dbg_dump_ref addr2link node_ref =
     | None ->
        let x = !dbg_addr in
        let (indeg, atom) = !node_ref in
-       print_string ("segfault... " ^ string_of_int x
+       print_string ("... #" ^ string_of_int x
 		     ^ " -> " ^ string_of_int indeg ^ ": " ^ dbg_dump_atom addr2link atom ^ "\n");
-       update_ref pred dbg_addr;
+       decr dbg_addr;
        x
     | Some s -> s
 and dbg_dump_atom addr2link = function  
-  | VMAtom (p, xs) -> p ^ " (" ^ String.concat ", " (List.map (dbg_dump_ref addr2link <. (!)) xs) ^ ")"
+  | VMAtom (p, xs) -> p ^ " [" ^ String.concat ", " (List.map (dbg_dump_ref addr2link <. (!)) xs) ^ "]"
   | VMInd x -> dbg_dump_ref addr2link !x
 
 let dbg_dump_ind addr2link (x, node_ref) =
