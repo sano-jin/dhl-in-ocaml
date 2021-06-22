@@ -54,10 +54,11 @@ let rec one_of f = function
 
 let rec insert x v = function
   | [] -> [(x, v)]
-  | (y, w) as h ::t ->
+  | ((y, w) as h) ::t ->
      if x = y then
-       if v <> w then failwith @@ "Bug: updating"
-       else (x, v)::t
+       (* NOT <>, but != *)
+       if v != w then failwith @@ "Bug: updating" 
+       else (x, v)::t 
      else h::insert x v t
 
 (** A helper function for `collect_indeg_arg` and `collect_indeg` *)					

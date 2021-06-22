@@ -47,7 +47,8 @@ let check_atom local_indegs indeg_pred (p, xs) env node_ref =
 
 	      
 (* node_ref must be pointing at a VMAtom not VMInd *)
-let check_ind local_indegs env node_ref = function
+let check_ind local_indegs env node_ref =
+  function
   | BLocalInd (x, (p, xs)) ->
      check_atom
        local_indegs
@@ -91,12 +92,13 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
        (* Was able to dereference with already known reference.
 	  In this case, the node_ref is guaranteeded to point an atom but an indirection atom.
 	  Since we have traversed indirection in the formaer process.
-	*)
+	*) 
        let* env = check_ind_ ind node_ref in
        find_atoms env redirs indegs atom_list t
   in	 
   function
-  | BLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
+  | BLocalInd (x, _) as ind ::t ->
+     try_deref x env.local2addr ind t
   | BFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
   | [] ->
      (* calculate free_addr2indeg *)
