@@ -73,9 +73,13 @@ let check_ind local_indegs env node_ref =
        }
        node_ref 
   | _ -> failwith @@ "Indirection on LHS is not supported"
- 
 
-let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list =
+let check_redir free2addr free_addr2indeg (x, y) =
+  let x = List.assoc x free2addr in
+  let y = List.assoc y free2addr in
+  x != y || List.assoc x free_addr2indeg == 0
+
+let rec find_atoms env free_link_info local_indegs atom_list =
   let check_ind_ = flip @@ check_ind local_indegs env in
   let try_deref x link2addr ind t =
     match List.assoc_opt x link2addr with
@@ -85,7 +89,7 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
 	 | node_ref::rest_atom_list ->
 	    (* node_ref must be pointing a VMAtom (not VMInd) *)
 	    ( let* env = check_ind_ ind node_ref in
-	      find_atoms env redirs indegs atom_list t
+	      find_atoms env free_link_info local_indegs atom_list t
 	    ) <|> fun _ -> try_match rest_atom_list
        in try_match atom_list
     | Some node_ref ->
@@ -94,13 +98,13 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
 	  Since we have traversed indirection in the formaer process.
 	*) 
        let* env = check_ind_ ind node_ref in
-       find_atoms env redirs indegs atom_list t
+       find_atoms env free_link_info local_indegs atom_list t
   in	 
   function
-  | BLocalInd (x, _) as ind ::t ->
-     try_deref x env.local2addr ind t
+  | BLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
   | BFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
   | [] ->
+     let (redirs, free_indeg_diffs) = free_link_info in
      (* calculate free_addr2indeg *)
      let free_addr2indeg =
        let free_addr2before_indeg =
@@ -110,13 +114,15 @@ let rec find_atoms env redirs ((local_indegs, free_indegs) as indegs) atom_list 
 	 (flip
 	  @@ fun (link_name, indeg) ->
 	     let node_ref = List.assoc link_name env.free2addr in
-	     update (fun _ -> failwith "Bug") (flip (-) indeg) node_ref)
+	     updateq (fun _ -> failwith "Bug") ((+) indeg) node_ref)
 	 free_addr2before_indeg
-	 free_indegs
+	 free_indeg_diffs
      in
      let env = {env with free_addr2indeg = free_addr2indeg} in
-	   (* possibly checks the additional free redirection condition here  *)
-     if redirs = () then Some env else None
+
+     (* possibly checks the additional free redirection condition here  *)
+     if List.for_all (check_redir env.free2addr free_addr2indeg) redirs then Some env
+     else None
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 

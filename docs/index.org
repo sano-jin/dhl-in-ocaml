@@ -24,11 +24,11 @@
 ** Usage
 
   #+NAME: Usage
-  #+BEGIN_SRC sh :dir ../ :exports both :results code
+  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
     opam exec -- dune exec dhl -- example/append.dhl
   #+END_SRC
 
-  #+RESULTS: Usage
+  #+RESULTS[e0c57b8f070978062c17c899b19171f1a61edb52]: Usage
   #+begin_src sh
   0: append(cons(a, cons(b, nil)), cons(c, nil))
   1: cons(a, append(cons(b, nil), cons(c, nil)))
@@ -38,53 +38,50 @@
   #+end_src
 
   
-  
-* 実装の概要
 
+* 実装の概要
   500 LOC 程度の非常に小さいプログラムである
   （ことを目指している）
-
+  
 ** LOC
   #+NAME: directory
-  #+BEGIN_SRC sh :exports results :results code :dir ../
+  #+BEGIN_SRC sh :exports results :results code :cache yes :dir ../ 
     cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
   #+END_SRC
 
-  #+RESULTS[a6c9a9dcab97dbc67780bcf26c773228d0a3b568]: directory
+  #+RESULTS[7e2b07c6dea30eca900b78fc802cb319d86aca97]: directory
   #+begin_src sh
   File                             blank        comment           code
   -------------------------------------------------------------------------------
-  match.ml                            15             20             86
+  match.ml                            16             20             93
+  util.ml                             24              3             63
   parser.mly                          20             12             59
-  util.ml                             23              2             58
-  pushout.ml                           4              2             52
-  breakdown.ml                        18             18             51
+  breakdown.ml                        19             19             55
+  pushout.ml                           6              2             51
   dump.ml                             10             13             48
   link_check.ml                       16             11             39
   main.ml                              7              7             39
   alpha.ml                            14             11             34
   lexer.mll                           10              8             34
   vm.ml                               14             16             34
-  eval.ml                              5              4             13
+  eval.ml                              5              5             13
   syntax.ml                            2              3              9
   -------------------------------------------------------------------------------
-  SUM:                               158            127            556
+  SUM:                               163            130            571
   -------------------------------------------------------------------------------
   #+end_src
-
 
 ** Dependencies
 
    #+name: dependencies
-   #+begin_src sh :dir ../ :exports none
+   #+begin_src sh :dir ../ :exports none :cache yes
      python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
    #+end_src
    
    #+RESULTS: dependencies
    
    [[./output.svg]]
-
-
+   
 ** プログラムの簡単な解説
 
    
@@ -114,7 +111,6 @@
     - main.ml		:: File loader and the main execution loop
 
       
-
 * アトムのメモリ管理に関して
   性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
   （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
@@ -174,7 +170,50 @@
    
 
 
-* テスト用の Dumper
+* 自由リンクのリダイレクションのチェック 
+
+  自由リンクのリダイレクションは，以下の両方を満たす場合には行なってはいけない
+
+  - 非単射的なマッチングを行っていて
+    - 要するにマッチングしたアトムを削除することになる
+  - リダイレクションを無理矢理行なった場合に被参照数が 1 以上になる
+    - 他からまだ参照されうる場合
+
+** Dactl との違い
+  Dactl ではそもそも，リダイレクションを行う自由リンクが非単射的マッチングを行うことを許していない
+  （と思われる）
+
+**  プログラム例
+
+  #+NAME: Invalid redirection
+  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
+    cat example/test3.dhl && echo "------"
+    opam exec -- dune exec dhl -- example/test3.dhl
+  #+END_SRC
+
+  #+RESULTS[e45ffe86b5bb6a02e9722edea000f6601d5990a5]: Invalid redirection
+  #+begin_src sh
+  \X.( 
+    X -> a(X), b(X)
+  ).
+
+  X -> a(Y) :- X -> Y.
+  0: b(L0). L0 -> a(L0)
+  Final state: b(L0). L0 -> a(L0)
+  #+end_src
+
+  これは遷移しない
+  
+  ただし，これは遷移する（Dactl だと遷移しない）
+  
+  #+NAME: Valid redirection
+  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
+    cat example/test4.dhl && echo "------"
+    opam exec -- dune exec dhl -- example/test4.dhl
+  #+END_SRC  
+  
+
+* デバッグ用の Dumper
 
   =-dbg= オプションをつけると，アトムリストをダンプする
 
@@ -186,12 +225,12 @@
       （シンボルアトムは必ずアトムリストに登録されているべきなので）
     
   
-  #+NAME: Execution with -dbg option
-  #+BEGIN_SRC sh :dir ../ :exports both :results code
+  #+NAME: Execution with -dbg option  
+  #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
     opam exec -- dune exec dhl -- example/append.dhl -dbg
   #+END_SRC
 
-  #+RESULTS: Execution with -dbg option
+  #+RESULTS[4fb386425d289537dd91897a3a55006a5780f44e]: Execution with -dbg option
   #+begin_src sh
   0: 
   #0 -> 1 : nil []

@@ -44,11 +44,12 @@ let push_atom (local_indegs, free_indegs) link2addrs =
 	 (local2addr, free2addr)
        else (local2addr, get_atom (x, VMInd y) free_indegs free2addr)
 
-let push_atoms (local_indegs, free_indegs) free_addr2indeg free2addrs inds =
+
+	      
+let push_atoms local_indegs free_addr2indeg free2addrs inds =
   let free_indegs =
-    flip List.map free_indegs
-    @@ fun (x, indeg) ->
-       (x, List.assoc (List.assoc x free2addrs) free_addr2indeg + indeg)
+    flip List.map free2addrs
+    @@ fun (x, addr) -> (x, List.assoc addr free_addr2indeg)
   in
   let generated_atoms = 
     List.map snd @@ fst

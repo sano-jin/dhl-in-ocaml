@@ -67,6 +67,12 @@ let rec update fallback f x = function
   | (y, v) as h::t ->
      if x = y then (y, f v) :: t
      else h::update fallback f x t
+
+let rec updateq fallback f x = function
+  | [] -> [x, fallback ()]
+  | (y, v) as h::t ->
+     if x == y then (y, f v) :: t
+     else h::updateq fallback f x t
 		    
 		    
 let rec update_assc_opt pred f fallback = function

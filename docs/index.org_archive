@@ -1,0 +1,19 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /Users/sano/Desktop/dhl-in-ocaml/docs/index.org
+
+
+* LOC
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2021-06-22 Tue 20:31
+  :ARCHIVE_FILE: ~/Desktop/dhl-in-ocaml/docs/index.org
+  :ARCHIVE_OLPATH: 実装の概要
+  :ARCHIVE_CATEGORY: index
+  :END:
+ #+NAME: directory
+ #+BEGIN_SRC sh :exports results :results code :dir ../ :cache yes
+   cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
+ #+END_SRC :cache yes
+
+
