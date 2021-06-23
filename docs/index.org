@@ -4,7 +4,6 @@
 #+SETUPFILE: https://fniessen.github.io/org-html-themes/org/theme-readtheorg.setup
 #+OPTIONS: ^:nil
 
-
 * About
   A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 
@@ -40,8 +39,7 @@
      Final state: cons(a, cons(b, cons(c, nil)))
    #+end_src
 
-  
-
+   
 * 実装の概要
   500 LOC 程度の非常に小さいプログラムである
   （ことを目指している）
@@ -113,7 +111,7 @@
 *** Repl
     - main.ml		:: File loader and the main execution loop
 
-      
+
 * アトムのメモリ管理に関して
   性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
   （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
@@ -171,7 +169,6 @@
        の和よりも大きくなることはない
        - つまり，参照カウンタの値がゼロになったら破棄して良い（それ以外に参照しているものはいないことが保証される）
    
-
 
 * 自由リンクのリダイレクションのチェック 
 
@@ -295,7 +292,7 @@
   #+end_src
 
 
-  
+
 * Dump.dump に関して
 
   トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
@@ -305,3 +302,47 @@
   あとで Indirection アトムは隠蔽するように変更しても良いかもしれない
 
   
+
+* マッチングの戦略
+  
+  #+NAME: Matching environment
+  #+BEGIN_SRC ocaml
+    type env = {
+	matched_atoms: node_ref list;
+	(** all the addresses of the matched atoms on lhs *)
+
+	local2addr: (int * node_ref) list;
+	free2addr: (string * node_ref) list;
+	free_addr2indeg: (node_ref * int) list;
+    }
+  #+END_SRC
+
+  全体としては，4本のリスト（スタック）を持つことになる（と思われる）
+
+  
+** マッチングを行ったアトムのアドレスの集合
+  マッチングを行ったアトムのアドレスは =matched_atoms= に追加する
+  - これはアトムへの非単射的なマッチングを防ぐため
+  - ファンクタごとに分類した方が効率的である
+  
+** リンクからアドレスへの写像
+   マッチングに成功したリンクは対応するノードのアドレスとともに持っておき，
+   次回からはアトムリストから探索するのではなく dereference を行う
+   - この，Dereference を行うかの判断は静的に行うことができる
+     （コンパイラのタスクである）
+
+  それぞれ，
+  - マッチングに成功した局所リンクは対応するノードのアドレスとともに =local2addr= に登録する
+  - マッチングに成功した自由リンクは対応するノードのアドレスとともに =free2addr= に登録する
+
+** 自由リンクから入次数への写像
+
+   これが計算されるのはマッチング終了間際（マッチング自体には成功して，自由リンクの入次数のチェックを行う前）である．
+
+   ただし，失敗したらバックトラックを行う必要があるために，あくまでマッチングの最後として行う必要がある
+   - マッチングと分離して，マッチング後に行うようにすることはできない
+   
+   要改良である
+   
+  
+   

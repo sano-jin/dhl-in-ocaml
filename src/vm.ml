@@ -7,12 +7,10 @@ type vm_atom =
 
 
 				
-(** An environment for matching and pushout *)
+(** An environment for the matching and pushout *)
 type env = {
-  (*  local_addrs: node_ref list; *)
   matched_atoms: node_ref list;
-  (** all the addresses of the matched atoms on lhs. 
-      possibly not indirected from a local link ? *)
+  (** all the addresses of the matched atoms on lhs *)
   
   local2addr: (int * node_ref) list;
   free2addr: (string * node_ref) list;
