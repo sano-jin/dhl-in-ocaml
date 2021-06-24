@@ -153,6 +153,7 @@
       - Indirection アトムの被参照数を1減らす
 	- アトムの引数からの参照の分
 	- これで Indirection アトムの被参照数がゼロになったらメモリを解放
+	- ……ではダメで，Indirection アトムからたどっているときは，その被参照数分だけ減算する必要がある
       - Indirection アトムを辿っているうちに普通のアトムに辿り着いたら
 	- そのアトムへの参照で元のアトムの引数を更新する
       - Indirection アトムを辿っているうちに自分自身に辿り着くということはあるか？
@@ -160,6 +161,9 @@
 	- 設計が正しければ，そんなことは起きない
 	- アトムの引数からは必ずアトムが一つ辿れるはずなので
 
+	  
+
+    
 ** Push に関して
    - 被参照数がゼロになるような Indirection はそもそも生成しない
    - Indirection の左辺の自由リンクは局所リンクでマッチしたアトムと同じく，
@@ -195,8 +199,8 @@
   
    #+RESULTS[26d99a4eded1fb5285063906fce06f4f3875aec9]: Invalid redirection
    #+begin_src sh
-   0: b(L0). L0 -> a(L0)
-   Final state: b(L0). L0 -> a(L0)
+     0: b(L0). L0 -> a(L0)
+     Final state: b(L0). L0 -> a(L0)
    #+end_src
 
    これは遷移しない
@@ -212,9 +216,9 @@
 
    #+RESULTS[90e3444d4a164f0271997fe477741db0b16894d6]: Valid redirection
    #+begin_src sh
-   0: L0 -> a(L0)
-   1: 
-   Final state: 
+     0: L0 -> a(L0)
+     1: 
+     Final state: 
    #+end_src
   
 
@@ -292,7 +296,6 @@
   #+end_src
 
 
-
 * Dump.dump に関して
 
   トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
@@ -302,38 +305,37 @@
   あとで Indirection アトムは隠蔽するように変更しても良いかもしれない
 
   
-
 * マッチングの戦略
   
   #+NAME: Matching environment
   #+BEGIN_SRC ocaml
     type env = {
-	matched_atoms: node_ref list;
-	(** all the addresses of the matched atoms on lhs *)
+      matched_atoms: node_ref list;
+      (** all the addresses of the matched atoms on lhs *)
 
-	local2addr: (int * node_ref) list;
-	free2addr: (string * node_ref) list;
-	free_addr2indeg: (node_ref * int) list;
+      local2addr: (int * node_ref) list;
+      free2addr: (string * node_ref) list;
+      free_addr2indeg: (node_ref * int) list;
     }
   #+END_SRC
 
   全体としては，4本のリスト（スタック）を持つことになる（と思われる）
+  - ただし，=free_addr2indeg= は実行中にずっと持ち続ける必要はない（かもしれない）
 
-  
 ** マッチングを行ったアトムのアドレスの集合
-  マッチングを行ったアトムのアドレスは =matched_atoms= に追加する
-  - これはアトムへの非単射的なマッチングを防ぐため
-  - ファンクタごとに分類した方が効率的である
-  
+   マッチングを行ったアトムのアドレスは =matched_atoms= に追加する
+   - これはアトムへの非単射的なマッチングを防ぐため
+   - ファンクタごとに分類した方が効率的である
+
 ** リンクからアドレスへの写像
    マッチングに成功したリンクは対応するノードのアドレスとともに持っておき，
    次回からはアトムリストから探索するのではなく dereference を行う
    - この，Dereference を行うかの判断は静的に行うことができる
      （コンパイラのタスクである）
 
-  それぞれ，
-  - マッチングに成功した局所リンクは対応するノードのアドレスとともに =local2addr= に登録する
-  - マッチングに成功した自由リンクは対応するノードのアドレスとともに =free2addr= に登録する
+   それぞれ，
+   - マッチングに成功した局所リンクは対応するノードのアドレスとともに =local2addr= に登録する
+   - マッチングに成功した自由リンクは対応するノードのアドレスとともに =free2addr= に登録する
 
 ** 自由リンクから入次数への写像
 
@@ -343,6 +345,11 @@
    - マッチングと分離して，マッチング後に行うようにすることはできない
    
    要改良である
-   
+     
+   =free_addr2indeg= を持たずに実装可能ではある（と思われる）
+   - 自由リンクの入次数チェックを行う前に破壊的代入を行なってしまい，
+     チェックを行った結果，ダメだったら再度正負を反転した入次数の差分を代入して戻すという手もある
+
+
+* メモ
   
-   
