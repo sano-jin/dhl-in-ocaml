@@ -83,7 +83,13 @@ let check_redir free2addr (x, y) =
   let y = List.assoc y free2addr in
   x != y || fst !x = 0
 
+let incr_redirected_indeg free2addr (x, y) =
+  let x = List.assoc x free2addr in
+  let y = List.assoc y free2addr in
+  update_ref (first @@ (+) @@ fst !x) y
 
+let incr_redirected_indegs = List.iter <. incr_redirected_indeg
+	     
 let check_redirs free_link_info env =
   let (redirs, free_indeg_diffs) = free_link_info in
   (* calculate free_addr2indeg *)
@@ -91,8 +97,11 @@ let check_redirs free_link_info env =
   update_free_indegs env.free2addr free_indeg_diffs env.free2addr;
 
   (* checks the additional free redirection condition here  *)
-  if List.for_all (check_redir env.free2addr) redirs then Some env
-  else (
+  if List.for_all (check_redir env.free2addr) redirs
+  then ( 
+    incr_redirected_indegs env.free2addr redirs; (* ??? <-- Is this right ?*)
+    Some env
+  ) else (
     let inversed_free_indeg_diffs = List.map (second @@ ( * ) (-1)) free_indeg_diffs in
     update_free_indegs env.free2addr inversed_free_indeg_diffs env.free2addr; (* rewind *)
     None
