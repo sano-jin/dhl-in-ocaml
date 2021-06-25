@@ -41,7 +41,7 @@ let run_file tracer dumper file_name  =
   | _ -> failwith "free links are not allowed in the initial graph"
 
 
-let usage_msg = "append [-t] [-verbose] <file1> [<file2>] ... "
+let usage_msg = "append [-t] [-v] <file1>"
 let verbose = ref false
 let trace = ref false
 let input_files = ref []

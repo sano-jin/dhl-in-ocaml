@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2021-06-25 Fri 10:32 -->
+<!-- 2021-06-25 Fri 18:48 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DHL in OCaml</title>
@@ -232,82 +232,83 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgcb27ea7">1. About</a>
+<li><a href="#orgc7c756a">1. About</a>
 <ul>
-<li><a href="#orgaa3905e">1.1. Getting Started</a>
+<li><a href="#org7195bdb">1.1. Getting Started</a>
 <ul>
-<li><a href="#orga3b8728">1.1.1. Prerequisites</a></li>
-<li><a href="#org1fa6862">1.1.2. Installation</a></li>
+<li><a href="#orge57a43e">1.1.1. Prerequisites</a></li>
+<li><a href="#orgaf2200a">1.1.2. Installation</a></li>
 </ul>
 </li>
-<li><a href="#org3d2f110">1.2. Usage</a></li>
+<li><a href="#orgde0fa86">1.2. Usage</a></li>
 </ul>
 </li>
-<li><a href="#org5782d14">2. 実装の概要</a>
+<li><a href="#org3721beb">2. 実装の概要</a>
 <ul>
-<li><a href="#org3a27ca4">2.1. LOC</a></li>
-<li><a href="#org9521d56">2.2. Dependencies</a></li>
-<li><a href="#orgca62589">2.3. プログラムの簡単な解説</a>
+<li><a href="#orgfd07357">2.1. LOC</a></li>
+<li><a href="#orgdbf1267">2.2. Dependencies</a></li>
+<li><a href="#org8a18bc1">2.3. プログラムの簡単な解説</a>
 <ul>
-<li><a href="#org25b259e">2.3.1. Utility functions</a></li>
-<li><a href="#org011daba">2.3.2. Compiler</a></li>
-<li><a href="#org326ed15">2.3.3. VM</a></li>
-<li><a href="#orgc9fed30">2.3.4. Repl</a></li>
+<li><a href="#org55eca74">2.3.1. Utility functions</a></li>
+<li><a href="#orgd26edf1">2.3.2. Compiler</a></li>
+<li><a href="#org0f9f85c">2.3.3. VM</a></li>
+<li><a href="#org1adc303">2.3.4. Repl</a></li>
 </ul>
 </li>
+<li><a href="#org3879077">2.4. 実行オプション一覧</a></li>
 </ul>
 </li>
-<li><a href="#org6d9eb0c">3. アトムのメモリ管理に関して</a>
+<li><a href="#org7cbf894">3. アトムのメモリ管理に関して</a>
 <ul>
-<li><a href="#org2912379">3.1. アトムが持つべき情報</a>
+<li><a href="#orgc2f1db7">3.1. アトムが持つべき情報</a>
 <ul>
-<li><a href="#org309a731">3.1.1. シンボルアトムの持つべき情報</a></li>
-<li><a href="#org5307267">3.1.2. Indirection アトムの持つべき情報</a></li>
+<li><a href="#org09f476f">3.1.1. シンボルアトムの持つべき情報</a></li>
+<li><a href="#org8f36445">3.1.2. Indirection アトムの持つべき情報</a></li>
 </ul>
 </li>
-<li><a href="#org8190910">3.2. トラバースに関して</a>
+<li><a href="#orga287f9c">3.2. トラバースに関して</a>
 <ul>
-<li><a href="#org2190e0b">3.2.1. アトムリストの参照から辿り始めた場合</a></li>
-<li><a href="#org4edd94b">3.2.2. アトムの引数のリンク（ポインタ）から辿り始めた場合</a></li>
+<li><a href="#orgd6fb847">3.2.1. アトムリストの参照から辿り始めた場合</a></li>
+<li><a href="#orga28f417">3.2.2. アトムの引数のリンク（ポインタ）から辿り始めた場合</a></li>
 </ul>
 </li>
-<li><a href="#org650e97f">3.3. Push に関して</a></li>
+<li><a href="#org709eca9">3.3. Push に関して</a></li>
 </ul>
 </li>
-<li><a href="#org8ae2886">4. 自由リンクのリダイレクションのチェック</a>
+<li><a href="#org921e44e">4. 自由リンクのリダイレクションのチェック</a>
 <ul>
-<li><a href="#orgffed865">4.1. Dactl との違い</a></li>
-<li><a href="#org53c3e0c">4.2. プログラム例</a></li>
+<li><a href="#org22a6eb5">4.1. Dactl との違い</a></li>
+<li><a href="#orge7e4093">4.2. プログラム例</a></li>
 </ul>
 </li>
-<li><a href="#org9b67d46">5. デバッグ用の Dumper</a></li>
-<li><a href="#org268c098">6. Dump.dump に関して</a></li>
-<li><a href="#org9022801">7. マッチングの戦略</a>
+<li><a href="#org5a3fc5e">5. デバッグ用の Dumper</a></li>
+<li><a href="#orgc8a3512">6. Dump.dump に関して</a></li>
+<li><a href="#orgec1a8e9">7. マッチングの戦略</a>
 <ul>
-<li><a href="#org646476c">7.1. マッチングを行ったアトムのアドレスの集合</a></li>
-<li><a href="#orgd0c480a">7.2. リンクからアドレスへの写像</a></li>
-<li><a href="#org43133bd">7.3. 自由リンクから入次数への写像</a></li>
+<li><a href="#org2c2e77e">7.1. マッチングを行ったアトムのアドレスの集合</a></li>
+<li><a href="#org255bbe9">7.2. リンクからアドレスへの写像</a></li>
+<li><a href="#org3a11fcc">7.3. 自由リンクから入次数への写像</a></li>
 </ul>
 </li>
-<li><a href="#org2883cab">8. メモ</a></li>
+<li><a href="#org5a89b56">8. メモ</a></li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgcb27ea7" class="outline-2">
-<h2 id="orgcb27ea7"><span class="section-number-2">1</span> About</h2>
+<div id="outline-container-orgc7c756a" class="outline-2">
+<h2 id="orgc7c756a"><span class="section-number-2">1</span> About</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 </p>
 </div>
 
-<div id="outline-container-orgaa3905e" class="outline-3">
-<h3 id="orgaa3905e"><span class="section-number-3">1.1</span> Getting Started</h3>
+<div id="outline-container-org7195bdb" class="outline-3">
+<h3 id="org7195bdb"><span class="section-number-3">1.1</span> Getting Started</h3>
 <div class="outline-text-3" id="text-1-1">
 </div>
-<div id="outline-container-orga3b8728" class="outline-4">
-<h4 id="orga3b8728"><span class="section-number-4">1.1.1</span> Prerequisites</h4>
+<div id="outline-container-orge57a43e" class="outline-4">
+<h4 id="orge57a43e"><span class="section-number-4">1.1.1</span> Prerequisites</h4>
 <div class="outline-text-4" id="text-1-1-1">
 <ul class="org-ul">
 <li><a href="https://opam.ocaml.org/">opam</a></li>
@@ -315,11 +316,11 @@ A minimal implementation of a graph rewriting language Directed HyperLMNtal.
 </div>
 </div>
 
-<div id="outline-container-org1fa6862" class="outline-4">
-<h4 id="org1fa6862"><span class="section-number-4">1.1.2</span> Installation</h4>
+<div id="outline-container-orgaf2200a" class="outline-4">
+<h4 id="orgaf2200a"><span class="section-number-4">1.1.2</span> Installation</h4>
 <div class="outline-text-4" id="text-1-1-2">
 <div class="org-src-container">
-<pre class="src src-sh" id="orgdbe3839">git clone https://github.com/sano-jin/dhl-in-ocaml
+<pre class="src src-sh" id="orgf0e0349">git clone https://github.com/sano-jin/dhl-in-ocaml
 cd dhl-in-ocaml
 opam install .
 opam exec -- dune build
@@ -329,13 +330,13 @@ opam exec -- dune build
 </div>
 </div>
 
-<div id="outline-container-org3d2f110" class="outline-3">
-<h3 id="org3d2f110"><span class="section-number-3">1.2</span> Usage</h3>
+<div id="outline-container-orgde0fa86" class="outline-3">
+<h3 id="orgde0fa86"><span class="section-number-3">1.2</span> Usage</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 example/append.dhl  
 </p>
-<pre class="example" id="org3ce18d6">
+<pre class="example" id="orga23932f">
 % A list appending example. 
 
 % The initial graph.
@@ -351,7 +352,7 @@ R -&gt; append(nil, L)
 </pre>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="orgd50a6b0">opam exec -- dune exec dhl -- example/append.dhl
+<pre class="src src-sh" id="orge189a28">opam exec -- dune exec dhl -- example/append.dhl
 </pre>
 </div>
 
@@ -368,8 +369,8 @@ Final state: cons(a, cons(b, cons(c, nil)))
 </div>
 
 
-<div id="outline-container-org5782d14" class="outline-2">
-<h2 id="org5782d14"><span class="section-number-2">2</span> 実装の概要</h2>
+<div id="outline-container-org3721beb" class="outline-2">
+<h2 id="org3721beb"><span class="section-number-2">2</span> 実装の概要</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 500 LOC 程度の非常に小さいプログラムである
@@ -377,38 +378,38 @@ Final state: cons(a, cons(b, cons(c, nil)))
 </p>
 </div>
 
-<div id="outline-container-org3a27ca4" class="outline-3">
-<h3 id="org3a27ca4"><span class="section-number-3">2.1</span> LOC</h3>
+<div id="outline-container-orgfd07357" class="outline-3">
+<h3 id="orgfd07357"><span class="section-number-3">2.1</span> LOC</h3>
 <div class="outline-text-3" id="text-2-1">
 <div class="org-src-container">
 <pre class="src src-sh">File                             blank        comment           code
 -------------------------------------------------------------------------------
-match.ml                            16             20             93
-util.ml                             24              3             63
+match.ml                            25             20             96
+breakdown.ml                        25             21             64
+util.ml                             24              3             64
 parser.mly                          20             12             59
-breakdown.ml                        19             19             55
-pushout.ml                           6              2             51
+main.ml                             11              8             50
 dump.ml                             10             13             48
+pushout.ml                          16              2             44
+vm.ml                               24             46             40
 link_check.ml                       16             11             39
-main.ml                              7              7             39
 alpha.ml                            14             11             34
 lexer.mll                           10              8             34
-vm.ml                               14             16             34
-eval.ml                              5              5             13
+eval.ml                              5              5             16
 syntax.ml                            2              3              9
 -------------------------------------------------------------------------------
-SUM:                               163            130            571
+SUM:                               202            163            597
 -------------------------------------------------------------------------------
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org9521d56" class="outline-3">
-<h3 id="org9521d56"><span class="section-number-3">2.2</span> Dependencies</h3>
+<div id="outline-container-orgdbf1267" class="outline-3">
+<h3 id="orgdbf1267"><span class="section-number-3">2.2</span> Dependencies</h3>
 <div class="outline-text-3" id="text-2-2">
 
-<div id="orge451817" class="figure">
+<div id="org672a052" class="figure">
 <p><object type="image/svg+xml" data="./output.svg" class="org-svg">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -416,12 +417,12 @@ Sorry, your browser does not support SVG.</object>
 </div>
 </div>
 
-<div id="outline-container-orgca62589" class="outline-3">
-<h3 id="orgca62589"><span class="section-number-3">2.3</span> プログラムの簡単な解説</h3>
+<div id="outline-container-org8a18bc1" class="outline-3">
+<h3 id="org8a18bc1"><span class="section-number-3">2.3</span> プログラムの簡単な解説</h3>
 <div class="outline-text-3" id="text-2-3">
 </div>
-<div id="outline-container-org25b259e" class="outline-4">
-<h4 id="org25b259e"><span class="section-number-4">2.3.1</span> Utility functions</h4>
+<div id="outline-container-org55eca74" class="outline-4">
+<h4 id="org55eca74"><span class="section-number-4">2.3.1</span> Utility functions</h4>
 <div class="outline-text-4" id="text-2-3-1">
 <dl class="org-dl">
 <dt>util.ml	</dt><dd>Some utility functions</dd>
@@ -429,12 +430,12 @@ Sorry, your browser does not support SVG.</object>
 </div>
 </div>
 
-<div id="outline-container-org011daba" class="outline-4">
-<h4 id="org011daba"><span class="section-number-4">2.3.2</span> Compiler</h4>
+<div id="outline-container-orgd26edf1" class="outline-4">
+<h4 id="orgd26edf1"><span class="section-number-4">2.3.2</span> Compiler</h4>
 <div class="outline-text-4" id="text-2-3-2">
 </div>
 <ol class="org-ol">
-<li><a id="org36a51eb"></a>Lexical/Syntax analysis<br />
+<li><a id="org6b36f1a"></a>Lexical/Syntax analysis<br />
 <div class="outline-text-5" id="text-2-3-2-1">
 <dl class="org-dl">
 <dt>syntax.ml</dt><dd>The abstract syntax definition</dd>
@@ -444,7 +445,7 @@ Sorry, your browser does not support SVG.</object>
 </div>
 </li>
 
-<li><a id="orgb95d339"></a>Semantic analysis<br />
+<li><a id="org3eab9c4"></a>Semantic analysis<br />
 <div class="outline-text-5" id="text-2-3-2-2">
 <dl class="org-dl">
 <dt>alpha.ml	</dt><dd>Convert local link names to fresh ids and partition atoms and rules</dd>
@@ -456,8 +457,8 @@ Sorry, your browser does not support SVG.</object>
 </ol>
 </div>
 
-<div id="outline-container-org326ed15" class="outline-4">
-<h4 id="org326ed15"><span class="section-number-4">2.3.3</span> VM</h4>
+<div id="outline-container-org0f9f85c" class="outline-4">
+<h4 id="org0f9f85c"><span class="section-number-4">2.3.3</span> VM</h4>
 <div class="outline-text-4" id="text-2-3-3">
 <dl class="org-dl">
 <dt>vm.ml	</dt><dd>Type definition of an atom and pretty printer for its multi-set</dd>
@@ -468,8 +469,8 @@ Sorry, your browser does not support SVG.</object>
 </div>
 </div>
 
-<div id="outline-container-orgc9fed30" class="outline-4">
-<h4 id="orgc9fed30"><span class="section-number-4">2.3.4</span> Repl</h4>
+<div id="outline-container-org1adc303" class="outline-4">
+<h4 id="org1adc303"><span class="section-number-4">2.3.4</span> Repl</h4>
 <div class="outline-text-4" id="text-2-3-4">
 <dl class="org-dl">
 <dt>main.ml	</dt><dd>File loader and the main execution loop</dd>
@@ -477,11 +478,30 @@ Sorry, your browser does not support SVG.</object>
 </div>
 </div>
 </div>
+
+<div id="outline-container-org3879077" class="outline-3">
+<h3 id="org3879077"><span class="section-number-3">2.4</span> 実行オプション一覧</h3>
+<div class="outline-text-3" id="text-2-4">
+<div class="org-src-container">
+<pre class="src src-sh" id="orgcbff6d5">opam exec -- dune exec dhl -- -help
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-sh">append [-t] [-v] &lt;file1&gt;
+  -t Trace
+  -v Output debug information
+  -help  Display this list of options
+  --help  Display this list of options
+</pre>
+</div>
+</div>
+</div>
 </div>
 
 
-<div id="outline-container-org6d9eb0c" class="outline-2">
-<h2 id="org6d9eb0c"><span class="section-number-2">3</span> アトムのメモリ管理に関して</h2>
+<div id="outline-container-org7cbf894" class="outline-2">
+<h2 id="org7cbf894"><span class="section-number-2">3</span> アトムのメモリ管理に関して</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
@@ -499,12 +519,12 @@ Void アトムで更新して，マッチングの際にアトムリストから
 </ul>
 </div>
 
-<div id="outline-container-org2912379" class="outline-3">
-<h3 id="org2912379"><span class="section-number-3">3.1</span> アトムが持つべき情報</h3>
+<div id="outline-container-orgc2f1db7" class="outline-3">
+<h3 id="orgc2f1db7"><span class="section-number-3">3.1</span> アトムが持つべき情報</h3>
 <div class="outline-text-3" id="text-3-1">
 </div>
-<div id="outline-container-org309a731" class="outline-4">
-<h4 id="org309a731"><span class="section-number-4">3.1.1</span> シンボルアトムの持つべき情報</h4>
+<div id="outline-container-org09f476f" class="outline-4">
+<h4 id="org09f476f"><span class="section-number-4">3.1.1</span> シンボルアトムの持つべき情報</h4>
 <div class="outline-text-4" id="text-3-1-1">
 <ul class="org-ul">
 <li>アトム名</li>
@@ -518,8 +538,8 @@ Void アトムで更新して，マッチングの際にアトムリストから
 </div>
 </div>
 
-<div id="outline-container-org5307267" class="outline-4">
-<h4 id="org5307267"><span class="section-number-4">3.1.2</span> Indirection アトムの持つべき情報</h4>
+<div id="outline-container-org8f36445" class="outline-4">
+<h4 id="org8f36445"><span class="section-number-4">3.1.2</span> Indirection アトムの持つべき情報</h4>
 <div class="outline-text-4" id="text-3-1-2">
 <ul class="org-ul">
 <li>引数のリンクを一本（ポインタ）</li>
@@ -539,12 +559,12 @@ Void アトムで更新して，マッチングの際にアトムリストから
 </div>
 </div>
 
-<div id="outline-container-org8190910" class="outline-3">
-<h3 id="org8190910"><span class="section-number-3">3.2</span> トラバースに関して</h3>
+<div id="outline-container-orga287f9c" class="outline-3">
+<h3 id="orga287f9c"><span class="section-number-3">3.2</span> トラバースに関して</h3>
 <div class="outline-text-3" id="text-3-2">
 </div>
-<div id="outline-container-org2190e0b" class="outline-4">
-<h4 id="org2190e0b"><span class="section-number-4">3.2.1</span> アトムリストの参照から辿り始めた場合</h4>
+<div id="outline-container-orgd6fb847" class="outline-4">
+<h4 id="orgd6fb847"><span class="section-number-4">3.2.1</span> アトムリストの参照から辿り始めた場合</h4>
 <div class="outline-text-4" id="text-3-2-1">
 <ul class="org-ul">
 <li>必ずシンボルアトムを dereference するべき</li>
@@ -553,8 +573,8 @@ Void アトムで更新して，マッチングの際にアトムリストから
 </div>
 </div>
 
-<div id="outline-container-org4edd94b" class="outline-4">
-<h4 id="org4edd94b"><span class="section-number-4">3.2.2</span> アトムの引数のリンク（ポインタ）から辿り始めた場合</h4>
+<div id="outline-container-orga28f417" class="outline-4">
+<h4 id="orga28f417"><span class="section-number-4">3.2.2</span> アトムの引数のリンク（ポインタ）から辿り始めた場合</h4>
 <div class="outline-text-4" id="text-3-2-2">
 <ul class="org-ul">
 <li>参照先がシンボルアトムなら普通にマッチする</li>
@@ -585,8 +605,8 @@ Void アトムで更新して，マッチングの際にアトムリストから
 
 
 
-<div id="outline-container-org650e97f" class="outline-3">
-<h3 id="org650e97f"><span class="section-number-3">3.3</span> Push に関して</h3>
+<div id="outline-container-org709eca9" class="outline-3">
+<h3 id="org709eca9"><span class="section-number-3">3.3</span> Push に関して</h3>
 <div class="outline-text-3" id="text-3-3">
 <ul class="org-ul">
 <li>被参照数がゼロになるような Indirection はそもそも生成しない</li>
@@ -600,14 +620,28 @@ Void アトムで更新して，マッチングの際にアトムリストから
 <li>つまり，参照カウンタの値がゼロになったら破棄して良い（それ以外に参照しているものはいないことが保証される）</li>
 </ul></li>
 </ul></li>
+
+<li>リダイレクションを行っている際は，リダイレクションの左辺の自由リンクがマッチしたアトムの被参照数を
+右辺がマッチした自由リンクのアトムの被参照数に加算する
+<ul class="org-ul">
+<li>Indirection はトラバースするので，マッチングを行う前の時点では必ずこれはシンボルアトムである</li>
+<li>リダイレクションによって，これは Indirection アトムになりうる．その場合問題ではないのか？
+<ul class="org-ul">
+<li>循環するリダイレクションならば，被参照数はゼロであることが保証されている
+<ul class="org-ul">
+<li>被参照数がゼロのときは，消去を行うので問題ではない？</li>
+<li>（そもそも本当に書き換え後も被参照数がゼロであることを保証できているのか？という問題もある）</li>
+</ul></li>
+</ul></li>
+</ul></li>
 </ul>
 </div>
 </div>
 </div>
 
 
-<div id="outline-container-org8ae2886" class="outline-2">
-<h2 id="org8ae2886"><span class="section-number-2">4</span> 自由リンクのリダイレクションのチェック</h2>
+<div id="outline-container-org921e44e" class="outline-2">
+<h2 id="org921e44e"><span class="section-number-2">4</span> 自由リンクのリダイレクションのチェック</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 自由リンクのリダイレクションは，以下の両方を満たす場合には行なってはいけない
@@ -625,8 +659,8 @@ Void アトムで更新して，マッチングの際にアトムリストから
 </ul>
 </div>
 
-<div id="outline-container-orgffed865" class="outline-3">
-<h3 id="orgffed865"><span class="section-number-3">4.1</span> Dactl との違い</h3>
+<div id="outline-container-org22a6eb5" class="outline-3">
+<h3 id="org22a6eb5"><span class="section-number-3">4.1</span> Dactl との違い</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 Dactl ではそもそも，リダイレクションを行う自由リンクが非単射的マッチングを行うことを許していない
@@ -635,10 +669,10 @@ Dactl ではそもそも，リダイレクションを行う自由リンクが�
 </div>
 </div>
 
-<div id="outline-container-org53c3e0c" class="outline-3">
-<h3 id="org53c3e0c"><span class="section-number-3">4.2</span> プログラム例</h3>
+<div id="outline-container-orge7e4093" class="outline-3">
+<h3 id="orge7e4093"><span class="section-number-3">4.2</span> プログラム例</h3>
 <div class="outline-text-3" id="text-4-2">
-<pre class="example" id="org51b7813">
+<pre class="example" id="org4bad4bf">
 \X. (
   X -&gt; a(X), b(X)
 ).
@@ -646,7 +680,7 @@ X -&gt; a(Y) :- X -&gt; Y.
 </pre>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="orgc01a8dc">opam exec -- dune exec dhl -- example/test3.dhl
+<pre class="src src-sh" id="org2318246">opam exec -- dune exec dhl -- example/test3.dhl
 </pre>
 </div>
 
@@ -665,13 +699,13 @@ Final state: b(L0). L0 -&gt; a(L0)
 ただし，これは遷移する（Dactl だと遷移しない）
 </p>
 
-<pre class="example" id="org2e88fc3">
+<pre class="example" id="orge797013">
 \X. X -&gt; a(X).
 X -&gt; a(Y) :- X -&gt; Y.
 </pre>
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org5020031">opam exec -- dune exec dhl -- example/test4.dhl
+<pre class="src src-sh" id="org2e3de6d">opam exec -- dune exec dhl -- example/test4.dhl
 </pre>
 </div>
 
@@ -686,11 +720,11 @@ Final state:
 </div>
 
 
-<div id="outline-container-org9b67d46" class="outline-2">
-<h2 id="org9b67d46"><span class="section-number-2">5</span> デバッグ用の Dumper</h2>
+<div id="outline-container-org5a3fc5e" class="outline-2">
+<h2 id="org5a3fc5e"><span class="section-number-2">5</span> デバッグ用の Dumper</h2>
 <div class="outline-text-2" id="text-5">
 <p>
-<code>-dbg</code> オプションをつけると，アトムリストをダンプする
+<code>-v</code> オプションをつけると，アトムリストをダンプする
 </p>
 
 <ul class="org-ul">
@@ -708,7 +742,7 @@ Final state:
 
 
 <div class="org-src-container">
-<pre class="src src-sh" id="org0d8d9f8">opam exec -- dune exec dhl -- example/append.dhl -dbg
+<pre class="src src-sh" id="org5340474">opam exec -- dune exec dhl -- example/append.dhl -t -v
 </pre>
 </div>
 
@@ -716,54 +750,54 @@ Final state:
 <pre class="src src-sh">0: 
 #0 -&gt; 1 : nil []
 #1 -&gt; 1 : c []
-#2 -&gt; 1 : nil []
-#3 -&gt; 1 : b []
-#4 -&gt; 1 : cons [#3, #2]
-#5 -&gt; 1 : a []
-#6 -&gt; 0 : append [#8, #7]
-#7 -&gt; 1 : cons [#1, #0]
-#8 -&gt; 1 : cons [#5, #4]
-
-1: 
-#0 -&gt; 1 : append [#5, #8]
-#1 -&gt; 1 : nil []
-#2 -&gt; 1 : c []
+#2 -&gt; 1 : cons [#1, #0]
 #3 -&gt; 1 : nil []
 #4 -&gt; 1 : b []
 #5 -&gt; 1 : cons [#4, #3]
 #6 -&gt; 1 : a []
-#7 -&gt; 0 : cons [#6, #0]
-#8 -&gt; 1 : cons [#2, #1]
+#7 -&gt; 1 : cons [#6, #5]
+#8 -&gt; 0 : append [#7, #2]
 
-2: 
-#0 -&gt; 1 : append [#4, #8]
-#1 -&gt; 1 : cons [#5, #0]
-#2 -&gt; 1 : nil []
-#3 -&gt; 1 : c []
+1: 
+#0 -&gt; 1 : append [#6, #3]
+#1 -&gt; 1 : nil []
+#2 -&gt; 1 : c []
+#3 -&gt; 1 : cons [#2, #1]
 #4 -&gt; 1 : nil []
 #5 -&gt; 1 : b []
-#6 -&gt; 1 : a []
-#7 -&gt; 0 : cons [#6, #1]
-#8 -&gt; 1 : cons [#3, #2]
+#6 -&gt; 1 : cons [#5, #4]
+#7 -&gt; 1 : a []
+#8 -&gt; 0 : cons [#7, #0]
+
+2: 
+#0 -&gt; 1 : append [#5, #4]
+#1 -&gt; 1 : cons [#6, #0]
+#2 -&gt; 1 : nil []
+#3 -&gt; 1 : c []
+#4 -&gt; 1 : cons [#3, #2]
+#5 -&gt; 1 : nil []
+#6 -&gt; 1 : b []
+#7 -&gt; 1 : a []
+#8 -&gt; 0 : cons [#7, #1]
 
 3: 
-#-1 -&gt; 1 : -&gt; [#6]
-#0 -&gt; 1 : cons [#3, #-1]
+#-1 -&gt; 1 : -&gt; [#3]
+#0 -&gt; 1 : cons [#4, #-1]
 #1 -&gt; 1 : nil []
 #2 -&gt; 1 : c []
-#3 -&gt; 1 : b []
-#4 -&gt; 1 : a []
-#5 -&gt; 0 : cons [#4, #0]
-#6 -&gt; 1 : cons [#2, #1]
+#3 -&gt; 1 : cons [#2, #1]
+#4 -&gt; 1 : b []
+#5 -&gt; 1 : a []
+#6 -&gt; 0 : cons [#5, #0]
 
 Final state: 
-#0 -&gt; 1 : cons [#3, #6]
+#0 -&gt; 1 : cons [#4, #3]
 #1 -&gt; 1 : nil []
 #2 -&gt; 1 : c []
-#3 -&gt; 1 : b []
-#4 -&gt; 1 : a []
-#5 -&gt; 0 : cons [#4, #0]
-#6 -&gt; 1 : cons [#2, #1]
+#3 -&gt; 1 : cons [#2, #1]
+#4 -&gt; 1 : b []
+#5 -&gt; 1 : a []
+#6 -&gt; 0 : cons [#5, #0]
 
 </pre>
 </div>
@@ -771,8 +805,9 @@ Final state:
 </div>
 
 
-<div id="outline-container-org268c098" class="outline-2">
-<h2 id="org268c098"><span class="section-number-2">6</span> Dump.dump に関して</h2>
+
+<div id="outline-container-orgc8a3512" class="outline-2">
+<h2 id="orgc8a3512"><span class="section-number-2">6</span> Dump.dump に関して</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
@@ -787,11 +822,11 @@ Indirection アトムも明示的に dump するようになっている
 </div>
 
 
-<div id="outline-container-org9022801" class="outline-2">
-<h2 id="org9022801"><span class="section-number-2">7</span> マッチングの戦略</h2>
+<div id="outline-container-orgec1a8e9" class="outline-2">
+<h2 id="orgec1a8e9"><span class="section-number-2">7</span> マッチングの戦略</h2>
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
-<pre class="src src-ocaml" id="org63acc0e">type env = {
+<pre class="src src-ocaml" id="org0018d4c">type env = {
   matched_atoms: node_ref list;
   (** all the addresses of the matched atoms on lhs *)
 
@@ -806,12 +841,12 @@ Indirection アトムも明示的に dump するようになっている
 全体としては，4本のリスト（スタック）を持つことになる（と思われる）
 </p>
 <ul class="org-ul">
-<li>ただし，=free_addr2indeg= は実行中にずっと持ち続ける必要はない（かもしれない）</li>
+<li>ただし， <code>free_addr2indeg</code> は実行中にずっと持ち続ける必要はない（かもしれない）</li>
 </ul>
 </div>
 
-<div id="outline-container-org646476c" class="outline-3">
-<h3 id="org646476c"><span class="section-number-3">7.1</span> マッチングを行ったアトムのアドレスの集合</h3>
+<div id="outline-container-org2c2e77e" class="outline-3">
+<h3 id="org2c2e77e"><span class="section-number-3">7.1</span> マッチングを行ったアトムのアドレスの集合</h3>
 <div class="outline-text-3" id="text-7-1">
 <p>
 マッチングを行ったアトムのアドレスは <code>matched_atoms</code> に追加する
@@ -823,8 +858,8 @@ Indirection アトムも明示的に dump するようになっている
 </div>
 </div>
 
-<div id="outline-container-orgd0c480a" class="outline-3">
-<h3 id="orgd0c480a"><span class="section-number-3">7.2</span> リンクからアドレスへの写像</h3>
+<div id="outline-container-org255bbe9" class="outline-3">
+<h3 id="org255bbe9"><span class="section-number-3">7.2</span> リンクからアドレスへの写像</h3>
 <div class="outline-text-3" id="text-7-2">
 <p>
 マッチングに成功したリンクは対応するノードのアドレスとともに持っておき，
@@ -845,8 +880,8 @@ Indirection アトムも明示的に dump するようになっている
 </div>
 </div>
 
-<div id="outline-container-org43133bd" class="outline-3">
-<h3 id="org43133bd"><span class="section-number-3">7.3</span> 自由リンクから入次数への写像</h3>
+<div id="outline-container-org3a11fcc" class="outline-3">
+<h3 id="org3a11fcc"><span class="section-number-3">7.3</span> 自由リンクから入次数への写像</h3>
 <div class="outline-text-3" id="text-7-3">
 <p>
 これが計算されるのはマッチング終了間際（マッチング自体には成功して，自由リンクの入次数のチェックを行う前）である．
@@ -875,13 +910,13 @@ Indirection アトムも明示的に dump するようになっている
 </div>
 
 
-<div id="outline-container-org2883cab" class="outline-2">
-<h2 id="org2883cab"><span class="section-number-2">8</span> メモ</h2>
+<div id="outline-container-org5a89b56" class="outline-2">
+<h2 id="org5a89b56"><span class="section-number-2">8</span> メモ</h2>
 </div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Jin SANO</p>
-<p class="date">Created: 2021-06-25 Fri 10:32</p>
+<p class="date">Created: 2021-06-25 Fri 18:48</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

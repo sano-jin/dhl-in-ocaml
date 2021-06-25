@@ -59,7 +59,7 @@ let check_ind local_indegs env node_ref =
 	 
 	 (* If x is the key of `addr` in `env.local2addr`, then the `addr` should be equal to `node_ref`.
 	    Since is the `x` is in the `env.local2addr`, then we should have conducted dereference hence
-	    the `node_ref` is lookuped from the `env.local2addr` in the former phase (`try_deref` in `find_atoms`).        
+	    the `node_ref` is lookuped from the `env.local2addr` in the former phase (`try_deref` in `find_atoms`).
 	  *)
 	 {env with local2addr = insert x node_ref env.local2addr}
 	 node_ref
@@ -78,28 +78,30 @@ let check_ind local_indegs env node_ref =
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 
-let check_redir free2addr (x, y) =
-  let x = List.assoc x free2addr in
-  let y = List.assoc y free2addr in
+		       
+let check_redir (x, y) =
   x != y || fst !x = 0
 
-let incr_redirected_indeg free2addr (x, y) =
-  let x = List.assoc x free2addr in
-  let y = List.assoc y free2addr in
+let incr_redirected_indeg (x, y) =
   update_ref (first @@ (+) @@ fst !x) y
 
-let incr_redirected_indegs = List.iter <. incr_redirected_indeg
-	     
-let check_redirs free_link_info env =
-  let (redirs, free_indeg_diffs) = free_link_info in
-  (* calculate free_addr2indeg *)
+let incr_redirected_indegs = List.iter incr_redirected_indeg
+
+let redir2addr free2addr (x, y) = 
+  (List.assoc x free2addr, List.assoc y free2addr)
+
+let redir2addrs = List.map <. redir2addr    
+
+				
+let check_redirs (redirs, free_indeg_diffs) env =
+  let redirs = redir2addrs env.free2addr redirs in
 
   update_free_indegs env.free2addr free_indeg_diffs env.free2addr;
 
   (* checks the additional free redirection condition here  *)
-  if List.for_all (check_redir env.free2addr) redirs
+  if List.for_all check_redir redirs
   then ( 
-    incr_redirected_indegs env.free2addr redirs; (* ??? <-- Is this right ?*)
+    incr_redirected_indegs redirs; (* ??? <-- Is this right ?*)
     Some env
   ) else (
     let inversed_free_indeg_diffs = List.map (second @@ ( * ) (-1)) free_indeg_diffs in
@@ -107,7 +109,7 @@ let check_redirs free_link_info env =
     None
   )
 
-					      
+			      
 let rec find_atoms env free_link_info local_indegs atom_list =
   let check_ind_ = flip @@ check_ind local_indegs env in
   let try_deref x link2addr ind t =

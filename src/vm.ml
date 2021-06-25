@@ -16,11 +16,10 @@ type env = {
   
   local2addr: (int * node_ref) list;
   free2addr: (string * node_ref) list;
-  free_addr2indeg: (node_ref * int) list; 
 }
 
 let empty_env =
-  {matched_atoms = []; local2addr = []; free2addr = []; free_addr2indeg = []}	     
+  {matched_atoms = []; local2addr = []; free2addr = []}	     
 
 
     

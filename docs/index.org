@@ -47,39 +47,39 @@
 ** LOC
    #+NAME: directory
    #+BEGIN_SRC sh :exports results :results code :cache yes :dir ../ 
-     cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
+     cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18 
    #+END_SRC
 
-   #+RESULTS[7e2b07c6dea30eca900b78fc802cb319d86aca97]: directory
+   #+RESULTS[00c3eb5e985c9fdd33011bb33a2dd33d916156e7]: directory
    #+begin_src sh
    File                             blank        comment           code
    -------------------------------------------------------------------------------
-   match.ml                            15             25             95
-   util.ml                             24              3             63
+   match.ml                            25             20             96
+   breakdown.ml                        25             21             64
+   util.ml                             24              3             64
    parser.mly                          20             12             59
-   breakdown.ml                        19             19             55
-   pushout.ml                           6              2             51
+   main.ml                             11              8             50
    dump.ml                             10             13             48
-   main.ml                             11              8             47
+   pushout.ml                          16              2             44
+   vm.ml                               24             46             40
    link_check.ml                       16             11             39
    alpha.ml                            14             11             34
    lexer.mll                           10              8             34
-   vm.ml                               18             46             34
-   eval.ml                              5              5             13
+   eval.ml                              5              5             16
    syntax.ml                            2              3              9
    -------------------------------------------------------------------------------
-   SUM:                               170            166            581
+   SUM:                               202            163            597
    -------------------------------------------------------------------------------
    #+end_src
-
+   
 ** Dependencies
 
    #+name: dependencies
    #+begin_src sh :dir ../ :exports none :cache yes
-     python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
+     python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg 
    #+end_src
    
-   #+RESULTS: dependencies
+   #+RESULTS[ec369ee9129c00d8e537103e44b5e7ab9d8851e1]: dependencies
    
    [[./output.svg]]
    
@@ -111,7 +111,23 @@
 *** Repl
     - main.ml		:: File loader and the main execution loop
 
+** 実行オプション一覧
 
+   #+name: options
+   #+BEGIN_SRC sh :exports both :results code :cache yes :dir ../ 
+     opam exec -- dune exec dhl -- -help
+   #+end_src
+   
+   #+RESULTS[eecf2970f6e28d51378a4675782fb1cccd0f55de]: options
+   #+begin_src sh
+   append [-t] [-verbose] <file1> [<file2>] ... 
+     -t Trace
+     -v Output debug information
+     -help  Display this list of options
+     --help  Display this list of options
+   #+end_src
+
+   
 * アトムのメモリ管理に関して
   性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
   （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
@@ -172,7 +188,15 @@
      - 従って，アトムの参照カウンタはシンボルアトムからの（間接参照も含む）参照数とアトムリストからの参照の分
        の和よりも大きくなることはない
        - つまり，参照カウンタの値がゼロになったら破棄して良い（それ以外に参照しているものはいないことが保証される）
-   
+
+   - リダイレクションを行っている際は，リダイレクションの左辺の自由リンクがマッチしたアトムの被参照数を
+     右辺がマッチした自由リンクのアトムの被参照数に加算する
+     - Indirection はトラバースするので，マッチングを行う前の時点では必ずこれはシンボルアトムである
+     - リダイレクションによって，これは Indirection アトムになりうる．その場合問題ではないのか？
+       - 循環するリダイレクションならば，被参照数はゼロであることが保証されている
+	 - 被参照数がゼロのときは，消去を行うので問題ではない？
+	 - （そもそも本当に書き換え後も被参照数がゼロであることを保証できているのか？という問題もある）
+       
 
 * 自由リンクのリダイレクションのチェック 
 
@@ -224,7 +248,7 @@
 
 * デバッグ用の Dumper
 
-  =-dbg= オプションをつけると，アトムリストをダンプする
+  =-v= オプションをつけると，アトムリストをダンプする
 
   - アトムリスト上に存在するアトムは 0 から連続する整数のアドレスをふって表示する
     - 全てシンボルアトムであるべき
@@ -234,68 +258,13 @@
       （シンボルアトムは必ずアトムリストに登録されているべきなので）
     
   
-  #+NAME: Execution with -dbg option  
+  #+NAME: Execution with verbose option  
   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-    opam exec -- dune exec dhl -- example/append.dhl -dbg
+    opam exec -- dune exec dhl -- example/append.dhl -t -v
   #+END_SRC
 
-  #+RESULTS[4fb386425d289537dd91897a3a55006a5780f44e]: Execution with -dbg option
-  #+begin_src sh
-    0: 
-    #0 -> 1 : nil []
-    #1 -> 1 : c []
-    #2 -> 1 : nil []
-    #3 -> 1 : b []
-    #4 -> 1 : cons [#3, #2]
-    #5 -> 1 : a []
-    #6 -> 0 : append [#8, #7]
-    #7 -> 1 : cons [#1, #0]
-    #8 -> 1 : cons [#5, #4]
 
-    1: 
-    #0 -> 1 : append [#5, #8]
-    #1 -> 1 : nil []
-    #2 -> 1 : c []
-    #3 -> 1 : nil []
-    #4 -> 1 : b []
-    #5 -> 1 : cons [#4, #3]
-    #6 -> 1 : a []
-    #7 -> 0 : cons [#6, #0]
-    #8 -> 1 : cons [#2, #1]
-
-    2: 
-    #0 -> 1 : append [#4, #8]
-    #1 -> 1 : cons [#5, #0]
-    #2 -> 1 : nil []
-    #3 -> 1 : c []
-    #4 -> 1 : nil []
-    #5 -> 1 : b []
-    #6 -> 1 : a []
-    #7 -> 0 : cons [#6, #1]
-    #8 -> 1 : cons [#3, #2]
-
-    3: 
-    #-1 -> 1 : -> [#6]
-    #0 -> 1 : cons [#3, #-1]
-    #1 -> 1 : nil []
-    #2 -> 1 : c []
-    #3 -> 1 : b []
-    #4 -> 1 : a []
-    #5 -> 0 : cons [#4, #0]
-    #6 -> 1 : cons [#2, #1]
-
-    Final state: 
-    #0 -> 1 : cons [#3, #6]
-    #1 -> 1 : nil []
-    #2 -> 1 : c []
-    #3 -> 1 : b []
-    #4 -> 1 : a []
-    #5 -> 0 : cons [#4, #0]
-    #6 -> 1 : cons [#2, #1]
-
-  #+end_src
-
-
+  
 * Dump.dump に関して
 
   トポロジカルソートを行う過程で，全ての到達可能なアトムのリストを返すため，
@@ -315,12 +284,10 @@
 
       local2addr: (int * node_ref) list;
       free2addr: (string * node_ref) list;
-      free_addr2indeg: (node_ref * int) list;
     }
   #+END_SRC
 
-  全体としては，4本のリスト（スタック）を持つことになる（と思われる）
-  - ただし，=free_addr2indeg= は実行中にずっと持ち続ける必要はない（かもしれない）
+  全体としては，3本のリスト（スタック）を持つことになる（と思われる）
 
 ** マッチングを行ったアトムのアドレスの集合
    マッチングを行ったアトムのアドレスは =matched_atoms= に追加する
@@ -344,11 +311,8 @@
    ただし，失敗したらバックトラックを行う必要があるために，あくまでマッチングの最後として行う必要がある
    - マッチングと分離して，マッチング後に行うようにすることはできない
    
-   要改良である
-     
-   =free_addr2indeg= を持たずに実装可能ではある（と思われる）
    - 自由リンクの入次数チェックを行う前に破壊的代入を行なってしまい，
-     チェックを行った結果，ダメだったら再度正負を反転した入次数の差分を代入して戻すという手もある
+     チェックを行った結果，ダメだったら再度正負を反転した入次数の差分を代入して戻す
 
 
 * メモ

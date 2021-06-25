@@ -80,15 +80,6 @@ let classify_ind (locals, frees, redirs) = function
 
 let classify_inds = List.fold_left classify_ind ([], [], []) 
 
-(** Bollect redirected free links for an additional indegree checking 
-    in non-injective matching.
-    UNFINISHED.   
-*)							    
-let collect_redir = function
-  | BRedir (x, y) -> Some (x, y)
-  | _ -> None
-
-let collect_redirs = List.filter_map collect_redir
 let free_indeg_diff rhs_free_indegs (lhs_free_link, lhs_free_indeg) =
   (lhs_free_link, maybe 0 (List.assoc_opt lhs_free_link rhs_free_indegs) - lhs_free_indeg)
 
