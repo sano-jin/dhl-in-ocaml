@@ -5,7 +5,7 @@ open Util
 open Vm
 
 
-let check_arg local_indegs env node_ref_mut =
+let check_arg env node_ref_mut =
   (* traverse indirection atoms till reach a symbol atom *)
   let node_ref = traverse node_ref_mut 1 in 
   function
@@ -29,7 +29,10 @@ let check_arg local_indegs env node_ref_mut =
      | None ->
 	if List.memq node_ref
 	   @@ List.map snd env.free2addr then None (* already mathced with a free link  *)
-	else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match  *)
+        (* 
+           else if List.assoc x local_indegs <> fst !node_ref then None (* indeg did not match  *) 
+         (* We would like to check this when we dereference the atom pointed by the local link *)
+         *)					
 	else Some {env with local2addr = (x, node_ref)::env.local2addr}
      | Some addr ->
 	if node_ref != addr then None (* local link matched to different addrs  *)
@@ -37,14 +40,14 @@ let check_arg local_indegs env node_ref_mut =
 
 
 			      
-let check_atom local_indegs (p, xs) env node_ref =
+let check_atom (p, xs) env node_ref =
   if List.memq node_ref env.matched_atoms then None (* already matched addr   *)
   else match snd !node_ref with
        | VMInd _ -> failwith @@ "Bug: we should not dereference indirection from an atom list"
        | VMAtom (q, ys) ->
 	  if p <> q then None (* different atom name  *)
 	  else zip ys xs
-	       >>= foldM (uncurry <. check_arg local_indegs)
+	       >>= foldM (uncurry <. check_arg)
 			 {env with matched_atoms = node_ref::env.matched_atoms}
 
 	      
@@ -55,7 +58,6 @@ let check_ind local_indegs env node_ref =
      if fst !node_ref <> List.assoc x local_indegs then None (* indeg did not match *)
      else
        check_atom
-	 local_indegs
 	 (p, xs)
 	 
 	 (* If x is the key of `addr` in `env.local2addr`, then the `addr` should be equal to `node_ref`.
@@ -67,7 +69,6 @@ let check_ind local_indegs env node_ref =
   | BFreeInd (x, (p, xs)) ->
      (* no indeg checking for a free link *)
      check_atom
-       local_indegs
        (p, xs)  
        {env with
 	 (* if x is the key of `addr` in `env.free2addr`, then the `addr` should be equal to `node_ref`.
