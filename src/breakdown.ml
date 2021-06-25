@@ -20,8 +20,17 @@ type b_ind =
   | BRedir of string * string
 
 (** (local_indegs, b_ind list) *)
-type graph = (int * int) list * b_ind list
-type b_rule = BRule of graph * graph * ((string * string) list * (string * int) list)
+type lhs = (int * int) list * b_ind list
+
+type free_indeg_diffs = (string * int) list
+				    
+(** (local_inds, free_inds, redirs) *)
+type rhs_graph = (int * b_atom) list * (string * b_atom) list * (string * string) list 
+
+(** (local_indegs, rhs_graph)*)
+type rhs = (int * int) list * rhs_graph
+
+type b_rule = BRule of lhs * free_indeg_diffs * rhs
 
 
 (** Breakdown argument atoms *)										 
@@ -64,6 +73,13 @@ let check_rule (((lhs_links, _), lhs_rules), ((rhs_links, _), rhs_rules)) =
   else check_link_cond (lhs_links, rhs_links)
 
 
+let classify_ind (locals, frees, redirs) = function
+  | BLocalInd (x, p_xs) -> ((x, p_xs)::locals, frees, redirs)
+  | BFreeInd (x, p_xs)  -> (locals, (x, p_xs)::frees, redirs)
+  | BRedir (x, y)       -> (locals, frees, (x, y)::redirs)
+
+let classify_inds = List.fold_left classify_ind ([], [], []) 
+
 (** Bollect redirected free links for an additional indegree checking 
     in non-injective matching.
     UNFINISHED.   
@@ -88,6 +104,7 @@ and breakdown_rule (lhs, rhs) =
   let rule = (breakdown lhs, breakdown rhs) in
   check_rule rule;
   let (((((lhs_local_indegs, lhs_free_indegs), _), l_graph), _), ((((rhs_local_indegs, rhs_free_indegs), _), r_graph), _)) = rule in
-  let redirs = collect_redirs r_graph in
-  BRule ((lhs_local_indegs, l_graph), (rhs_local_indegs, r_graph), (redirs, free_indeg_diff lhs_free_indegs rhs_free_indegs))
+  let rhs_graph = classify_inds r_graph in
+  let free_indeg_diff = free_indeg_diff lhs_free_indegs rhs_free_indegs in
+  BRule ((lhs_local_indegs, l_graph), free_indeg_diff, (rhs_local_indegs, rhs_graph))
 

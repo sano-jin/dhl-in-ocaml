@@ -32,7 +32,10 @@ let rec run_many tracer dumper i rules atoms =
 let run_file tracer dumper file_name  =
   match file_name |> read_file |> parse |> breakdown with
   | ((((local_indegs, []), []), inds), rules) ->
-     let final_state = run_many tracer dumper 0 rules @@ Eval.init_atoms local_indegs inds in
+     let final_state =
+       run_many tracer dumper 0 rules
+       @@ Eval.init_atoms local_indegs @@ classify_inds inds
+     in
      Vm.clean_atom_list final_state;
      print_endline @@ "Final state: " ^ dumper final_state
   | _ -> failwith "free links are not allowed in the initial graph"

@@ -1,5 +1,7 @@
 (** vm.ml *)
 
+open Util
+       
 type vm_atom =
   | VMAtom of string * node_ref ref list
   | VMInd of node_ref ref
@@ -14,7 +16,7 @@ type env = {
   
   local2addr: (int * node_ref) list;
   free2addr: (string * node_ref) list;
-  free_addr2indeg: (node_ref * int) list;
+  free_addr2indeg: (node_ref * int) list; 
 }
 
 let empty_env =
@@ -94,5 +96,15 @@ let clean_atom_list atom_list =
   let clean_atom node_ref =
     match snd !node_ref with
     | VMInd _ -> failwith "Bug: indirection must not be dereferenced from an atom list"
-    | VMAtom (_, xs) -> List.map traverse xs 
-  in ignore @@ List.map clean_atom atom_list
+    | VMAtom (_, xs) -> List.iter (ignore <. flip traverse 1) xs 
+  in List.iter clean_atom atom_list
+
+
+let update_free_indeg free2addr free_indeg_diffs (x, _) =
+  let node_ref = List.assoc x free2addr in
+  let free_indeg_diff = List.assoc x free_indeg_diffs in
+  update_ref (first @@ (+) free_indeg_diff) node_ref
+
+let update_free_indegs free2addr = List.iter <. update_free_indeg free2addr
+  
+	       
