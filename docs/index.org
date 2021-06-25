@@ -179,7 +179,6 @@
 
 	  
 
-    
 ** Push に関して
    - 被参照数がゼロになるような Indirection はそもそも生成しない
    - Indirection の左辺の自由リンクは局所リンクでマッチしたアトムと同じく，
@@ -196,56 +195,11 @@
        - 循環するリダイレクションならば，被参照数はゼロであることが保証されている
 	 - 被参照数がゼロのときは，消去を行うので問題ではない？
 	 - （そもそも本当に書き換え後も被参照数がゼロであることを保証できているのか？という問題もある）
-       
-
-* 自由リンクのリダイレクションのチェック 
-
-  自由リンクのリダイレクションは，以下の両方を満たす場合には行なってはいけない
-
-  - 非単射的なマッチングを行っていて
-    - 要するにマッチングしたアトムを削除することになる
-  - リダイレクションを無理矢理行なった場合に被参照数が 1 以上になる
-    - 他からまだ参照されうる場合
-
-** Dactl との違い
-   Dactl ではそもそも，リダイレクションを行う自由リンクが非単射的マッチングを行うことを許していない
-   （と思われる）
-
-**  プログラム例
-
-   #+include: ../example/test3.dhl example
-
-   #+NAME: Invalid redirection
-   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-     opam exec -- dune exec dhl -- example/test3.dhl
-   #+END_SRC
-
-  
-   #+RESULTS[26d99a4eded1fb5285063906fce06f4f3875aec9]: Invalid redirection
-   #+begin_src sh
-     0: b(L0). L0 -> a(L0)
-     Final state: b(L0). L0 -> a(L0)
-   #+end_src
-
-   これは遷移しない
-  
-   ただし，これは遷移する（Dactl だと遷移しない）
-
-   #+include: ../example/test4.dhl example
-  
-   #+NAME: Valid redirection
-   #+BEGIN_SRC sh :dir ../ :exports both :results code :cache yes
-     opam exec -- dune exec dhl -- example/test4.dhl
-   #+END_SRC  
-
-   #+RESULTS[90e3444d4a164f0271997fe477741db0b16894d6]: Valid redirection
-   #+begin_src sh
-     0: L0 -> a(L0)
-     1: 
-     Final state: 
-   #+end_src
-  
-
+	 - リダイレクションがひとつの場合ならこれで良いが，二つ以上になるとうまくいかない（かも）
+	   - 同値類で分類してチェックする？
+	   
+   
+   
 * デバッグ用の Dumper
 
   =-v= オプションをつけると，アトムリストをダンプする
@@ -316,4 +270,18 @@
 
 
 * メモ
+  
+Garbage collector を必要としないハイパーグラフ書き換え言語
+
+サブグラフの共有，循環参照を扱うことももちろんできる
+
+参照カウンタは持っているものの，普通のアトムは GC をするわけではない
+- Indirection アトムは除去する必要があるが，これは（意味論上は）循環する可能性もある
+- 参照カウンタのみで循環する Indirection を検知してこれをメモリリークさせずに扱うのはちょっとした課題
+
+局所リンクのパターンマッチはもしかしたら他の（グラフ書き換え）言語にはあまりない話かもしれない
+- 全称量化マッチングに繋がる話
+
+参照カウンタに関しても，線形性解析などによりかなりの部分を除去可能だと思われる
+- 最適化の余地はたくさんある
   
