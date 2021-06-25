@@ -3,7 +3,7 @@
 test () {
     echo "testing $1"
     opam exec -- dune exec dhl -- ../example/$1.dhl -t > tmp/output_$1.log
-    colordiff tmp/output_$1.log expected/expected_output_$1.log || exit
+    opam exec -- patdiff tmp/output_$1.log expected/expected_output_$1.log || exit
 }
 echo testing
 mkdir tmp

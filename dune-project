@@ -15,5 +15,6 @@
  (depends
   (ounit :with-test)
   (menhir (>= 20210419))
+  (patdiff (>= 0.14.0))
   (dune (> 1.5))))
 (using menhir 2.1)
