@@ -36,4 +36,4 @@ jobs:
 
       - run: opam exec -- dune runtest
 
-      - run: cd test && test/test.sh
+      - run: cd test && ./test.sh
