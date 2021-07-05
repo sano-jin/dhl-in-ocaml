@@ -2,7 +2,6 @@
 
 let (<.) f g = fun x -> f (g x)
 let (<..) f g = fun x y -> f (g x y)
-let (<...) f g = fun x y z -> f (g x y z)
 
 let (>>=) = Option.bind
 let ( let* ) = Option.bind

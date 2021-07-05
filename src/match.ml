@@ -4,7 +4,7 @@ open Breakdown
 open Util
 open Vm
 
-
+       
 let check_arg env node_ref_mut =
   (* traverse indirection atoms till reach a symbol atom *)
   let node_ref = traverse node_ref_mut 1 in 
@@ -78,37 +78,6 @@ let check_ind local_indegs env node_ref =
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 
-		       
-let check_redir (x, y) =
-  x != y || fst !x = 0
-
-let incr_redirected_indeg (x, y) =
-  update_ref (first @@ (+) @@ fst !x) y
-
-let incr_redirected_indegs = List.iter incr_redirected_indeg
-
-let redir2addr free2addr (x, y) = 
-  (List.assoc x free2addr, List.assoc y free2addr)
-
-let redir2addrs = List.map <. redir2addr    
-
-				
-let check_redirs (redirs, free_indeg_diffs) env =
-  let redirs = redir2addrs env.free2addr redirs in
-
-  update_free_indegs env.free2addr free_indeg_diffs env.free2addr;
-
-  (* checks the additional free redirection condition here  *)
-  if List.for_all check_redir redirs
-  then ( 
-    incr_redirected_indegs redirs; (* ??? <-- Is this right ?*)
-    Some env
-  ) else (
-    let inversed_free_indeg_diffs = List.map (second @@ ( * ) (-1)) free_indeg_diffs in
-    update_free_indegs env.free2addr inversed_free_indeg_diffs env.free2addr; (* rewind *)
-    None
-  )
-
 			      
 let rec find_atoms env free_link_info local_indegs atom_list =
   let check_ind_ = flip @@ check_ind local_indegs env in
@@ -134,7 +103,7 @@ let rec find_atoms env free_link_info local_indegs atom_list =
   function
   | BLocalInd (x, _) as ind ::t -> try_deref x env.local2addr ind t
   | BFreeInd  (x, _) as ind ::t -> try_deref x env.free2addr ind t
-  | [] -> check_redirs free_link_info env
+  | [] -> Redir.check_redirs free_link_info env
   | _ -> failwith @@ "Indirection on LHS is not supported"
 
 

@@ -51,41 +51,42 @@
 *** LOC
     #+NAME: directory
     #+BEGIN_SRC sh :exports results :results code :cache yes :dir ../ 
-      cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18 
+      cd src && ../scripts/cloc.sh "*.ml *.mll *.mly" | tail -n 18
     #+END_SRC
 
-    #+RESULTS[00c3eb5e985c9fdd33011bb33a2dd33d916156e7]: directory
+    #+RESULTS[7e2b07c6dea30eca900b78fc802cb319d86aca97]: directory
     #+begin_src sh
-    File                             blank        comment           code
     -------------------------------------------------------------------------------
-    match.ml                            25             20             96
-    breakdown.ml                        25             21             64
-    util.ml                             24              3             64
+    match.ml                            15             19             76
+    redir.ml                            24             29             74
+    util.ml                             24              3             63
+    breakdown.ml                        24             17             60
     parser.mly                          20             12             59
     main.ml                             11              8             50
     dump.ml                             10             13             48
     pushout.ml                          16              2             44
-    vm.ml                               24             46             40
     link_check.ml                       16             11             39
+    vm.ml                               24             46             39
     alpha.ml                            14             11             34
     lexer.mll                           10              8             34
     eval.ml                              5              5             16
     syntax.ml                            2              3              9
     -------------------------------------------------------------------------------
-    SUM:                               202            163            597
+    SUM:                               215            187            645
     -------------------------------------------------------------------------------
     #+end_src
     
 *** Dependencies
 
     #+name: dependencies
-    #+begin_src sh :dir ../ :exports none :cache yes
-      python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg 
+    #+begin_src sh :exports none :cache yes
+      python3 ../scripts/dep_graph.py ../src | dot -Tsvg > output.svg
     #+end_src
    
-    #+RESULTS[ec369ee9129c00d8e537103e44b5e7ab9d8851e1]: dependencies
-   
+    #+RESULTS[b9d5cf55d29638c0c19dedec3df91d9dfd492c83]: dependencies
+    
     [[./output.svg]]
+
    
 *** プログラムの簡単な解説
 
@@ -102,7 +103,7 @@
       - parser.mly 	:: Defines a grammar for parsing
 
 ***** Semantic analysis
-      - alpha.ml		:: Convert local link names to fresh ids and partition atoms and rules
+      - alpha.ml	:: Convert local link names to fresh ids and partition atoms and rules
       - link_check.ml	:: Collect link information and check them
       - breakdown.ml	:: Check rule conditions and break down atoms
 
@@ -131,7 +132,7 @@
       --help  Display this list of options
     #+end_src
     
-   
+    
 ** アトムのメモリ管理に関して
    性能を出すためには，局所リンクでマッチしたアトムや Indirection アトム
    （自由リンクでマッチしてシンボルアトムを置き換える）を毎回アトムリストから削除するよりも，
@@ -162,6 +163,7 @@
      - Indirection アトムは他のシンボルアトムからの被参照数がゼロの場合はそもそも生成しない
        - アトムリストにも登録しない
 
+	 
 *** トラバースに関して
 
 **** アトムリストの参照から辿り始めた場合
@@ -203,7 +205,8 @@
 	  - （そもそも本当に書き換え後も被参照数がゼロであることを保証できているのか？という問題もある）
 	  - リダイレクションがひとつの場合ならこれで良いが，二つ以上になるとうまくいかない（かも）
 	    - 同値類で分類してチェックする？
-   
+
+	      
 *** リダイレクトにおける参照カウンタの再設定と不正な間接循環参照の検出と解放できる間接参照の特定アルゴリズム
 
     https://gitlab.ueda.info.waseda.ac.jp/sano/reference-counter-problem を参照
@@ -390,6 +393,5 @@
      - 単にエッジを除去するだけではダメ
    という有向グラフを扱う言語は意外なことにない（と思われる）
 
-*** 
 
 	 
