@@ -32,12 +32,12 @@ let partitionEithers l = List.partition_map id l
 
 let curry f x y = f (x, y)
 let uncurry f (x, y) = f x y
-let rec uncurried_zip = function
+let rec uncurried_safe_zip = function
   | ([], []) -> Some []
-  | (xh::xt, yh::yt) -> (xh, yh) <::> uncurried_zip (xt, yt)
+  | (xh::xt, yh::yt) -> (xh, yh) <::> uncurried_safe_zip (xt, yt)
   | _ -> None
 
-let zip t = curry uncurried_zip t
+let safe_zip t = curry uncurried_safe_zip t
 let zip_const c = List.map @@ flip pair c
 
 let sym_diff l r =
@@ -54,10 +54,11 @@ let rec one_of f = function
 
 let rec insert x v = function
   | [] -> [(x, v)]
-  | (y, w) as h ::t ->
+  | ((y, w) as h) ::t ->
      if x = y then
-       if v <> w then failwith @@ "Bug: updating"
-       else (x, v)::t
+       (* NOT <>, but != *)
+       if v != w then failwith @@ "Bug: updating" 
+       else (x, v)::t 
      else h::insert x v t
 
 (** A helper function for `collect_indeg_arg` and `collect_indeg` *)					
@@ -66,6 +67,12 @@ let rec update fallback f x = function
   | (y, v) as h::t ->
      if x = y then (y, f v) :: t
      else h::update fallback f x t
+
+let rec updateq fallback f x = function
+  | [] -> [x, fallback ()]
+  | (y, v) as h::t ->
+     if x == y then (y, f v) :: t
+     else h::updateq fallback f x t
 		    
 		    
 let rec update_assc_opt pred f fallback = function
@@ -81,3 +88,11 @@ let maybe default = function
   | None -> default
   | Some s -> s 
 
+(** fold_left の関数がオプションを返すバージョン
+    - ダメだったらそこで止まって None を返す
+    - 大丈夫なら順々に関数を適用していく
+ *)
+let rec fold_opt f unit = function
+  | [] -> Some unit
+  | h::t -> f unit h >>= flip (fold_opt f) t
+							   

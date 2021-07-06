@@ -10,7 +10,6 @@ license: "MIT"
 homepage: "https://github.com/sano-jin/dhl-in-ocaml"
 bug-reports: "https://github.com/sano-jin/dhl-in-ocaml/issues"
 depends: [
-  "ounit" {with-test}
   "menhir" {>= "20210419"}
   "dune" {>= "2.8" & > "1.5"}
   "odoc" {with-doc}

@@ -20,7 +20,7 @@ type a_atom =
 (** (local_id, local_indeg) list, (free_name, free_indeg) list *)
 type indegs = (int * int) list * (string * int) list
 
-(** (indegs, free_name list) *)
+(** (indegs, free_incidence list) *)
 type link_info = indegs * string list
 
 				 

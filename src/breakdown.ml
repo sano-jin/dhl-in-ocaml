@@ -19,8 +19,18 @@ type b_ind =
   | BFreeInd of string * b_atom
   | BRedir of string * string
 
-type graph = link_info * b_ind list
-type b_rule = BRule of graph * (graph * b_rule list) * (string * string) list
+(** (local_indegs, b_ind list) *)
+type lhs = (int * int) list * b_ind list
+
+type free_indeg_diffs = (string * int) list
+				    
+(** (local_inds, free_inds, redirs) *)
+type rhs_graph = (int * b_atom) list * (string * b_atom) list * (string * string) list 
+
+(** (local_indegs, rhs_graph)*)
+type rhs = (int * int) list * rhs_graph
+
+type b_rule = BRule of lhs * free_indeg_diffs * rhs
 
 
 (** Breakdown argument atoms *)										 
@@ -63,25 +73,29 @@ let check_rule (((lhs_links, _), lhs_rules), ((rhs_links, _), rhs_rules)) =
   else check_link_cond (lhs_links, rhs_links)
 
 
-(** Bollect redirected free links for an additional indegree checking 
-    in non-injective matching.
-    UNFINISHED.   
-*)							    
-let collect_redir = function
-  | BRedir (x, y) -> Some (x, y)
-  | _ -> None
+let classify_ind (locals, frees, redirs) = function
+  | BLocalInd (x, p_xs) -> ((x, p_xs)::locals, frees, redirs)
+  | BFreeInd (x, p_xs)  -> (locals, (x, p_xs)::frees, redirs)
+  | BRedir (x, y)       -> (locals, frees, (x, y)::redirs)
 
-let collect_redirs = List.filter_map collect_redir
-				     				     
+let classify_inds = List.fold_left classify_ind ([], [], []) 
+
+let free_indeg_diff rhs_free_indegs (lhs_free_link, lhs_free_indeg) =
+  (lhs_free_link, maybe 0 (List.assoc_opt lhs_free_link rhs_free_indegs) - lhs_free_indeg)
+
+let free_indeg_diff lhs_free_indegs rhs_free_indegs =
+  List.map (free_indeg_diff rhs_free_indegs) lhs_free_indegs
+
 let rec breakdown proc =
   let link_id, (atoms, rules) = alpha proc in
-  let (local_indegs, free_indegs), free_names = collect_link_info atoms in
+  let (local_indegs, free_indegs), free_incidences = collect_link_info atoms in
   let local_indegs, inds = breakdown_inds (link_id, local_indegs) atoms in
-  (((local_indegs, free_indegs), free_names), inds), List.map breakdown_rule rules
+  (((local_indegs, free_indegs), free_incidences), inds), List.map breakdown_rule rules
 and breakdown_rule (lhs, rhs) =
   let rule = (breakdown lhs, breakdown rhs) in
   check_rule rule;
-  let (lhs, _), (((_, r_graph), _) as rhs) = rule in
-  let redirs = List.filter_map collect_redir r_graph in
-  BRule (lhs, rhs, redirs)
+  let (((((lhs_local_indegs, lhs_free_indegs), _), l_graph), _), ((((rhs_local_indegs, rhs_free_indegs), _), r_graph), _)) = rule in
+  let rhs_graph = classify_inds r_graph in
+  let free_indeg_diff = free_indeg_diff lhs_free_indegs rhs_free_indegs in
+  BRule ((lhs_local_indegs, l_graph), free_indeg_diff, (rhs_local_indegs, rhs_graph))
 
