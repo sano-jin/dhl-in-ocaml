@@ -36,4 +36,4 @@ jobs:
 
       - run: opam exec -- dune runtest
 
-      - run: cd test && ./test.sh
+      - run: test/test-colorless.sh

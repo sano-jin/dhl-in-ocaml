@@ -13,8 +13,8 @@
  (synopsis "Directed HyperLMNtal interpreter")
  (description "A minimal interpreter of a language based on graph rewriting in OCaml")
  (depends
-  (ounit :with-test)
+  ; (ounit :with-test)
   (menhir (>= 20210419))
-  (patdiff (>= 0.14.0))
+  ; (patdiff (>= 0.14.0))
   (dune (> 1.5))))
 (using menhir 2.1)

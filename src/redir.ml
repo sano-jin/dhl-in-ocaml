@@ -17,6 +17,7 @@ let rec traverse_ind redirs visited node_ref =
        | Some next_node_ref ->
 	  traverse_ind redirs (node_ref::visited) next_node_ref (* 間接ノードだったのでまだ辿る *)
 
+		       
 (** 間接参照の辺を逆にする *)
 let rev_redir rredirs (from, to_) =
   updateq (fun _ -> [from]) (List.cons from) to_ rredirs
