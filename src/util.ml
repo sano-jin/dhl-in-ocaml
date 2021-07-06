@@ -88,3 +88,11 @@ let maybe default = function
   | None -> default
   | Some s -> s 
 
+(** fold_left の関数がオプションを返すバージョン
+    - ダメだったらそこで止まって None を返す
+    - 大丈夫なら順々に関数を適用していく
+ *)
+let rec fold_opt f unit = function
+  | [] -> Some unit
+  | h::t -> f unit h >>= flip (fold_opt f) t
+							   
